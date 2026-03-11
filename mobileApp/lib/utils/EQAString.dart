@@ -1,0 +1,84 @@
+const String? s_welcome = "Welcome Again!";
+const String? s_subscribe = "Subscribe";
+const String? s_enrollment  = "Enrollment";
+const String? s_sample = "Tracking IDs Process";
+const String? s_enroll = "Apply";
+const String? s_start_enrollment = "Start Enrollment";
+const String? s_samples = "Samples";
+const String? s_results = "Results";
+const String? s_setting = "Setting";
+const String? s_reports = "Reports";
+const String? s_scheme_provider = "Scheme Provider";
+const String? s_scheme = "Scheme";
+const String? s_round = "Round";
+const String? s_collection_date = "Collection Date";
+const String? s_received_date = "Received Date";
+const String? s_tested_date = "Tested Date";
+const String? s_authorized_date = "Authorised Date";
+const String? s_released_date = "Released Date";
+const String? s_shipped_date = "Shipped Date";
+const String? s_rejection_reason = "Rejection Reason";
+const String? s_accept = "Accept";
+const String? s_accepted = "Accepted";
+
+const String? s_reject = "Reject";
+const String? s_rejected = "Rejected";
+const String? s_confirm = "Confirm";
+const String? s_confirmed = "Confirmed";
+const String? s_remove = "Remove";
+const String? s_removed = "Removed";
+const String? s_cancel = "Cancel";
+const String? s_cancelled = "Cancelled";
+const String? s_submit = "Submit";
+const String? s_submitted = "Submitted";
+const String? s_ok = "Ok";
+const String? s_send = "Send";
+const String? s_sent = "Sent";
+const String? s_edit = "Edit";
+const String? s_edited = "Edited";
+
+const String? s_add = "Add";
+const String? s_added = "Added";
+const String? s_add_new = "Add new";
+const String? s_save = "Save";
+const String? s_ignore = "Ignore";
+const String? s_required = "Required";
+const String? s_optional = "Optional";
+const String? s_name = "Name";
+const String? s_phone_number = "Phone number";
+const String? s_email = "Email";
+const String? s_password = "Password";
+const String? s_username  = "Username";
+const String? s_login = "Login";
+const String? s_logout = "Logout";
+const String? s_list = "List";
+const String? s_history = "History";
+const String? s_subscribed_schemes = "Subscribed Schemes";
+const String? s_search = "Search";
+const String? s_search_scheme = "Search Scheme";
+const String? s_new_enrollment  = "New Enrollment";
+const String? s_a_participant = "A. Participant";
+const String? s_participant = "Participant";
+const String? s_participant_infos = "Participant Information";
+const String? s_participant_info_description = "Fill Participant Information as required";
+const String? s_b_schemes = "B. Schemes";
+const String? s_c_test_points = "C. Test Points";
+const String? s_d_documents = "D. Documents";
+const String? s_e_confirm = "E. Confirm";
+const String? s_contact_person_name = "Contact Person Name";
+const String? s_contact_position = "Contact Position";
+const String? s_region = "Region";
+const String? s_district = "District";
+const String? s_facility = "Facility";
+const String? s_document_no = "Document No";
+const String? s_pt_application_form = "PT Application Form";
+const String? s_created_date = "Created Date";
+const String? s_scheme_selection = "Scheme Selection";
+const String? s_select_scheme_to_enroll = "Select Scheme To Enroll";
+const String? s_test_point_selection = "Test Point Selection";
+const String? s_select_test_point_to_enroll = "Select Test Points for this enrollment";
+
+
+
+
+
