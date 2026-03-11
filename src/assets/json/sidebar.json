@@ -1,0 +1,192 @@
+[
+  {
+    "tittle": "Main",
+    "showAsTab": true,
+    "separateRoute": false,
+    "menu": [
+      {
+        "menuValue": "Dashboard",
+        "icon": "grid",
+        "route": "/dashboard",
+        "active_link": "/dashboard",
+        "hasSubRoute": false,
+        "showSubRoute": false
+      },
+      {
+        "menuValue": "Users",
+        "icon": "users",
+        "active_link": "users",
+        "hasSubRoute": true,
+        "showSubRoute": false,
+        "subMenus": [
+          {
+            "menuValue": "All Users",
+            "route": "/users/list"
+          }
+        ]
+      },
+      {
+        "menuValue": "Courses",
+        "icon": "book",
+        "active_link": "courses",
+        "hasSubRoute": true,
+        "showSubRoute": false,
+        "subMenus": [
+          {
+            "menuValue": "All Courses",
+            "route": "/courses/list"
+          },
+          {
+            "menuValue": "Course Enrollments",
+            "route": "/courses/course-enrollment"
+          }
+        ]
+      },
+      {
+        "menuValue": "Modules",
+        "icon": "layers",
+        "active_link": "modules",
+        "hasSubRoute": true,
+        "showSubRoute": false,
+        "subMenus": [
+          {
+            "menuValue": "All Modules",
+            "route": "/modules/list"
+          },
+          {
+            "menuValue": "Module Attachments",
+            "route": "/modules/attachments"
+          }
+        ]
+      },
+      {
+        "menuValue": "Course Materials",
+        "icon": "file-text",
+        "active_link": "materials",
+        "hasSubRoute": true,
+        "showSubRoute": false,
+        "subMenus": [
+          {
+            "menuValue": "Documents",
+            "route": "/materials/documents"
+          },
+          {
+            "menuValue": "Videos",
+            "route": "/materials/videos"
+          },
+          {
+            "menuValue": "Audio",
+            "route": "/materials/audio"
+          }
+        ]
+      },
+      {
+        "menuValue": "Quiz & Questions",
+        "icon": "help-circle",
+        "active_link": "quiz",
+        "hasSubRoute": true,
+        "showSubRoute": false,
+        "subMenus": [
+          {
+            "menuValue": "All Questions",
+            "route": "/quiz/questions"
+          },
+          {
+            "menuValue": "Create Question",
+            "route": "/quiz/create"
+          },
+          {
+            "menuValue": "User Answers",
+            "route": "/quiz/answers"
+          }
+        ]
+      },
+      {
+        "menuValue": "Live Classes",
+        "icon": "video",
+        "active_link": "live-class",
+        "hasSubRoute": true,
+        "showSubRoute": false,
+        "subMenus": [
+          {
+            "menuValue": "Schedule Class",
+            "route": "/live-classes/create"
+          },
+          {
+            "menuValue": "All Classes",
+            "route": "/live-classes"
+          },
+          {
+            "menuValue": "Class Participants",
+            "route": "/live-classes/participants"
+          }
+        ]
+      },
+      {
+        "menuValue": "User Activity",
+        "icon": "activity",
+        "active_link": "activity",
+        "hasSubRoute": true,
+        "showSubRoute": false,
+        "subMenus": [
+          {
+            "menuValue": "Document Views",
+            "route": "/activity/document-views"
+          },
+          {
+            "menuValue": "Video Views",
+            "route": "/activity/video-views"
+          },
+          {
+            "menuValue": "Downloads",
+            "route": "/activity/downloads"
+          }
+        ]
+      },
+      {
+        "menuValue": "Reports",
+        "icon": "bar-chart-2",
+        "active_link": "reports",
+        "hasSubRoute": true,
+        "showSubRoute": false,
+        "subMenus": [
+          {
+            "menuValue": "User Report",
+            "route": "/reports/users"
+          },
+          {
+            "menuValue": "Course Report",
+            "route": "/reports/courses"
+          },
+          {
+            "menuValue": "Course Enrollment Report",
+            "route": "/reports/enrollments"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "tittle": "Settings",
+    "showAsTab": true,
+    "separateRoute": false,
+    "menu": [
+      {
+        "menuValue": "Profile",
+        "icon": "user",
+        "route": "/profile",
+        "active_link": "/profile",
+        "hasSubRoute": false,
+        "showSubRoute": false
+      },
+      {
+        "menuValue": "Roles & Permissions",
+        "icon": "shield",
+        "route": "/roles",
+        "active_link": "/roles",
+        "hasSubRoute": false,
+        "showSubRoute": false
+      }
+    ]
+  }
+]
