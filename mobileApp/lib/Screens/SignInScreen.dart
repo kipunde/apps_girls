@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../Services/AuthService.dart';
@@ -8,6 +7,7 @@ import '../utils/AppColors.dart';
 import '../utils/AppWidget.dart';
 import 'DrawerWidget.dart';
 import 'HomeScreen.dart';
+import 'SignUpScreen.dart'; // Make sure you have this screen
 
 class SignInScreen extends StatefulWidget {
   static String tag = '/SignInScreen';
@@ -41,9 +41,8 @@ class SignInScreenState extends State<SignInScreen> {
         // Get user details from secure storage
         final userDetails = await authService.getUserAccessDetails();
 
-        // Debug print to verify values
         debugPrint(
-            "LOGGED IN USER → name: ${userDetails?.name}, accessLevel: ${userDetails?.accessLevel}, designation: ${userDetails?.designation}");
+            "LOGGED IN USER → name: ${userDetails?.name}, role: ${userDetails?.role}");
 
         // Save user name in appStore (fallback to "Guest")
         appStore.setUserName(userDetails?.name ?? "Guest");
@@ -55,7 +54,6 @@ class SignInScreenState extends State<SignInScreen> {
       }
     } catch (e) {
       setState(() => errorMessage = e.toString());
-       
     } finally {
       setState(() => loading = false);
     }
@@ -88,6 +86,7 @@ class SignInScreenState extends State<SignInScreen> {
               children: [
                 Text('Sign In', style: boldTextStyle(size: 24)),
                 30.height,
+
                 // EMAIL
                 TextFormField(
                   controller: emailCont,
@@ -113,6 +112,7 @@ class SignInScreenState extends State<SignInScreen> {
                   textInputAction: TextInputAction.next,
                 ),
                 16.height,
+
                 // PASSWORD
                 TextFormField(
                   obscureText: obscureText,
@@ -131,20 +131,25 @@ class SignInScreenState extends State<SignInScreen> {
                         borderRadius: BorderRadius.circular(8.0),
                         borderSide: BorderSide(
                             color: appStore!.textSecondaryColor ?? Colors.blue)),
-                    suffix: Icon(
-                            !obscureText ? Icons.visibility : Icons.visibility_off)
-                        .onTap(() {
-                      obscureText = !obscureText;
-                      setState(() {});
-                    }),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                          obscureText ? Icons.visibility_off : Icons.visibility),
+                      onPressed: () {
+                        setState(() {
+                          obscureText = !obscureText;
+                        });
+                      },
+                    ),
                   ),
                 ),
                 16.height,
+
                 // ERROR MESSAGE
                 if (errorMessage.isNotEmpty)
                   Text(errorMessage,
                           style: TextStyle(color: Colors.red, fontSize: 14))
                       .paddingSymmetric(vertical: 8),
+
                 // SIGN IN BUTTON
                 Container(
                   alignment: Alignment.center,
@@ -165,11 +170,40 @@ class SignInScreenState extends State<SignInScreen> {
                       : Text('Sign In',
                           style: boldTextStyle(color: white, size: 18)),
                 ).onTap(() {
-                  if (!loading && emailCont.text.isNotEmpty && passCont.text.isNotEmpty) {
+                  if (!loading &&
+                      emailCont.text.isNotEmpty &&
+                      passCont.text.isNotEmpty) {
                     handleLogin();
                   }
                 }),
+
                 10.height,
+
+                // REGISTER LINK
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Don't have an account? ",
+                      style: secondaryTextStyle(),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        // Navigate to your SignUp screen
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SignUpScreen(),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        "Register",
+                        style: boldTextStyle(color: appColorPrimary),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ).center(),
