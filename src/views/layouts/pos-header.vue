@@ -124,7 +124,7 @@ export default {
     <div class="header-left active">
       <router-link to="/dashboard" class="logo logo-normal">
         <!-- <img src="@/assets/img/logo.png" alt=""> -->
-         Logo here
+        WOMENBIZ 360
       </router-link>
       <router-link to="/dashboard" class="logo logo-white">
         <!-- <img src="@/assets/img/logo-white.png" alt=""> -->
@@ -195,19 +195,7 @@ export default {
       <!-- /Search -->
 
       <!-- Flag -->
-      <li class="nav-item dropdown has-arrow flag-nav nav-item-box">
-        <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="javascript:void(0);" role="button">
-          <img src="@/assets/img/flags/us.png" alt="Language" class="img-fluid">
-        </a>
-        <div class="dropdown-menu dropdown-menu-right">
-          <a href="javascript:void(0);" class="dropdown-item active">
-            <img src="@/assets/img/flags/us.png" alt="" height="16"> English
-          </a>
-          <a href="javascript:void(0);" class="dropdown-item">
-            <img src="@/assets/img/flags/fr.png" alt="" height="16"> Kiswahili
-          </a>
-        </div>
-      </li>
+
       <!-- /Flag -->
 
       <li class="nav-item nav-item-box">
@@ -215,12 +203,7 @@ export default {
           <vue-feather type="maximize"></vue-feather>
         </a>
       </li>
-      <li class="nav-item nav-item-box">
-        <router-link to="/application/email">
-          <vue-feather type="mail"></vue-feather>
-          <span class="badge rounded-pill">0</span>
-        </router-link>
-      </li>
+     
 
      <!-- Notifications -->
 <li class="nav-item dropdown nav-item-box">
@@ -228,10 +211,9 @@ export default {
     <vue-feather type="bell"></vue-feather>
     <span class="badge rounded-pill">{{ notifCount }}</span>
   </router-link>
+
 </li>
-      <li class="nav-item nav-item-box">
-        <router-link to="/settings/general-settings"><vue-feather type="settings"></vue-feather></router-link>
-      </li>
+     
 
       <!-- User Dropdown -->
       <li class="nav-item dropdown has-arrow main-drop">
