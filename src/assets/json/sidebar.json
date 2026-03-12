@@ -167,22 +167,22 @@
     ]
   },
   {
-    "tittle": "Settings",
+    "tittle": "",
     "showAsTab": true,
     "separateRoute": false,
     "menu": [
       {
-        "menuValue": "Profile",
-        "icon": "user",
-        "route": "/profile",
+        "menuValue": "",
+        "": "",
+        "": "",
         "active_link": "/profile",
         "hasSubRoute": false,
         "showSubRoute": false
       },
       {
-        "menuValue": "Roles & Permissions",
-        "icon": "shield",
-        "route": "/roles",
+        "menuValue": "",
+        "": "",
+        "": "",
         "active_link": "/roles",
         "hasSubRoute": false,
         "showSubRoute": false
