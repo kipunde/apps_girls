@@ -59,10 +59,10 @@ if (!password_verify($password, $user['password'])) {
 /*-------------------------------------------
 | Check role
 -------------------------------------------*/
-if ($user['role'] !== 'admin') {
+if ($user['status'] != 2) {
     echo json_encode([
         "code" => 403,
-        "message" => "Only admin allowed"
+        "message" => "Your account is not activated by admin"
     ]);
     exit;
 }
