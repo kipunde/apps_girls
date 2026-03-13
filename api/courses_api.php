@@ -307,12 +307,29 @@ case 'list_modules':
     $row['document_url'] = $row['document_path']
     ? $protocol . "://" . $host . $basePath . "/uploads/modules/" . $row['document_path']
     : null;
-    $row['audio_url'] = $row['audio_link'] 
-    ? $protocol . "://" . $host . $basePath . "/uploads/modules/" . $row['audio_link'] 
-    : null;
-    $row['video_url'] = $row['video_link'] 
-    ? $protocol . "://" . $host . $basePath . "/uploads/modules/" . $row['video_link'] 
-    : null;
+     $row['audio_url'] = null;
+if (!empty($row['audio_link'])) {
+
+    if (preg_match('/^https?:\/\//', $row['audio_link'])) {
+        $row['audio_url'] = $row['audio_link'];
+    } else if (strpos($row['audio_link'], 'www.') === 0) {
+        $row['audio_url'] = "https://" . $row['audio_link'];
+    } else {
+        $row['audio_url'] = $protocol . "://" . $host . $basePath . "/uploads/modules/" . $row['audio_link'];
+    }
+}
+
+$row['video_url'] = null;
+if (!empty($row['video_link'])) {
+
+    if (preg_match('/^https?:\/\//', $row['video_link'])) {
+        $row['video_url'] = $row['video_link'];
+    } else if (strpos($row['video_link'], 'www.') === 0) {
+        $row['video_url'] = "https://" . $row['video_link'];
+    } else {
+        $row['video_url'] = $protocol . "://" . $host . $basePath . "/uploads/modules/" . $row['video_link'];
+    }
+}
 
     $modules[] = [
     'id' => $row['id'],
