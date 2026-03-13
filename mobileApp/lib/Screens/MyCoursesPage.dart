@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:esrs_eqa_app/Screens/HomeScreen.dart';
 import 'package:flutter/material.dart';
 
 import '../Models/Course.dart';
@@ -70,8 +71,19 @@ class MyCoursesPageState extends State<MyCoursesPage> {
           elevation: 0,
           centerTitle: true,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => exit(0),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+          if (Navigator.canPop(context)) {
+          // Go back to the previous page if possible
+          Navigator.pop(context);
+          } else {
+          // Otherwise, navigate to the home screen (replace with your home page)
+          Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => HomeScreen()),
+          );
+          }
+          },
           ),
           title: const Text(
             "WomenBiz 360",

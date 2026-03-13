@@ -71,30 +71,39 @@ class ApiService {
   }
 }
 
-Future<List<Course>> getUserCourses(int userId) async {
-  try {
-    print("Fetching courses for user id: $userId");
 
-    final response = await http.get(
-      Uri.parse('$baseAPIPath/user_course.php?user_id=$userId'),
+// Example method to enroll course
+ Future<List<Course>> getUserCourses(int userId) async {
+  print("Fetching courses for user id: $userId");
+
+  try {
+    final response = await http.post(
+      Uri.parse('${baseAPIPath}user_course.php'),
+      body: {
+        'user_id': userId.toString(),
+      },
     );
 
-    print("Response status: ${response.statusCode}");
-    print("Response body: ${response.body}");
+    print("Status code: ${response.statusCode}");
+    print("API response: ${response.body}");
 
     if (response.statusCode != 200) {
       throw Exception("Failed to load user courses: HTTP ${response.statusCode}");
     }
 
-    final List data = jsonDecode(response.body);
+    final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
 
-    print("Parsed courses: $data");
+    if (jsonResponse['code'] != 200) {
+      throw Exception("API Error: ${jsonResponse['message']}");
+    }
 
+    final List data = jsonResponse['courses'] ?? [];
     return data.map((json) => Course.fromJson(json)).toList();
   } catch (e) {
     print("Error fetching courses: $e");
     rethrow;
   }
 }
+
   
   }
