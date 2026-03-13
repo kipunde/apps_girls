@@ -1,3 +1,4 @@
+import 'package:esrs_eqa_app/Screens/HomeScreen.dart';
 import 'package:flutter/material.dart';
 import '../Services/AuthService.dart';
 import '../Screens/SignInScreen.dart';
@@ -70,7 +71,10 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                 drawerItem(
                   icon: Icons.home,
                   title: "Home",
-                  onTap: () => Navigator.pop(context),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => HomeScreen()),
+                  ),
                 ),
 
                 drawerItem(
@@ -78,7 +82,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                   title: "Live Class",
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const LiveClassPage()),
+                    MaterialPageRoute(builder: (_) => LiveClassPage()),
                   ),
                 ),
 
@@ -87,7 +91,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                   title: "My Courses",
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const MyCoursesPage()),
+                    MaterialPageRoute(builder: (_) => MyCoursesPage()),
                   ),
                 ),
 
@@ -96,7 +100,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                   title: "My Modules",
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const MyModulesPage()),
+                    MaterialPageRoute(builder: (_) => MyModulesPage()),
                   ),
                 ),
 
@@ -105,7 +109,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                   title: "Materials",
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const MaterialsPage()),
+                    MaterialPageRoute(builder: (_) => MaterialsPage()),
                   ),
                 ),
 
@@ -116,7 +120,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                   title: "About Us",
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const AboutPage()),
+                    MaterialPageRoute(builder: (_) => AboutPage()),
                   ),
                 ),
 
@@ -125,7 +129,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                   title: "Contact Us",
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const ContactUsPage()),
+                    MaterialPageRoute(builder: (_) => ContactUsPage()),
                   ),
                 ),
 
@@ -134,7 +138,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                   title: "Help & Support",
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const HelpSupportPage()),
+                    MaterialPageRoute(builder: (_) => HelpSupportPage()),
                   ),
                 ),
 

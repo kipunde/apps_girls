@@ -70,5 +70,31 @@ class ApiService {
     return false;
   }
 }
+
+Future<List<Course>> getUserCourses(int userId) async {
+  try {
+    print("Fetching courses for user id: $userId");
+
+    final response = await http.get(
+      Uri.parse('$baseAPIPath/user_course.php?user_id=$userId'),
+    );
+
+    print("Response status: ${response.statusCode}");
+    print("Response body: ${response.body}");
+
+    if (response.statusCode != 200) {
+      throw Exception("Failed to load user courses: HTTP ${response.statusCode}");
+    }
+
+    final List data = jsonDecode(response.body);
+
+    print("Parsed courses: $data");
+
+    return data.map((json) => Course.fromJson(json)).toList();
+  } catch (e) {
+    print("Error fetching courses: $e");
+    rethrow;
+  }
+}
   
   }
