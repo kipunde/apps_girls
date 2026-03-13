@@ -33,7 +33,6 @@ try {
     $totalUsers = (int)$conn->query("SELECT COUNT(*) as cnt FROM users")->fetch_assoc()['cnt'];
     $totalStudent = (int)$conn->query("SELECT COUNT(*) as cnt FROM users WHERE role!='admin'")->fetch_assoc()['cnt'];
     $totalCourses = (int)$conn->query("SELECT COUNT(*) as cnt FROM courses")->fetch_assoc()['cnt'];
-    $totalEnrollments = (int)$conn->query("SELECT COUNT(*) as cnt FROM enrollments")->fetch_assoc()['cnt'];
     $totalModules = (int)$conn->query("SELECT COUNT(*) as cnt FROM modules")->fetch_assoc()['cnt'];
 
     // --- Quick stats ---
@@ -49,7 +48,6 @@ try {
         "dashboardStats" => [
             ["title" => "Total Users", "value" => $totalUsers, "icon" => "users"],
             ["title" => "Total Courses", "value" => $totalCourses, "icon" => "book-open"],
-            ["title" => "Total Enrollments", "value" => $totalEnrollments, "icon" => "check-circle"],
             ["title" => "Total Modules", "value" => $totalModules, "icon" => "layers"],
         ],
         "quickStats" => [

@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:nb_utils/nb_utils.dart';
-
 import '../Services/AuthService.dart';
 import '../main.dart';
 import '../utils/AppColors.dart';
 import '../utils/AppWidget.dart';
 import 'DrawerWidget.dart';
 import 'HomeScreen.dart';
-import 'SignUpScreen.dart'; // Make sure you have this screen
+import 'SignUpScreen.dart';
 
 class SignInScreen extends StatefulWidget {
   static String tag = '/SignInScreen';
@@ -27,7 +26,7 @@ class SignInScreenState extends State<SignInScreen> {
 
   final authService = AuthService();
 
-  // ----------------- HANDLE LOGIN -----------------
+  /// ---------------- LOGIN FUNCTION ----------------
   void handleLogin() async {
     setState(() {
       loading = true;
@@ -38,16 +37,13 @@ class SignInScreenState extends State<SignInScreen> {
       final success = await authService.login(emailCont.text, passCont.text);
 
       if (success) {
-        // Get user details from secure storage
         final userDetails = await authService.getUserAccessDetails();
 
         debugPrint(
             "LOGGED IN USER → name: ${userDetails?.name}, role: ${userDetails?.role}");
 
-        // Save user name in appStore (fallback to "Guest")
         appStore.setUserName(userDetails?.name ?? "Guest");
 
-        // Navigate to Home screen
         HomeScreen().launch(context);
       } else {
         setState(() => errorMessage = "Invalid email or password");
@@ -59,7 +55,7 @@ class SignInScreenState extends State<SignInScreen> {
     }
   }
 
-  // ----------------- LIFECYCLE -----------------
+  /// ---------------- CLEANUP ----------------
   @override
   void dispose() {
     emailCont.dispose();
@@ -68,145 +64,169 @@ class SignInScreenState extends State<SignInScreen> {
     super.dispose();
   }
 
-  // ----------------- UI -----------------
+  /// ---------------- UI ----------------
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      appBar: appBar(context, 'Sign In'),
-      drawer: DrawerWidget(),
-      body: Center(
-        child: Container(
-          width: dynamicWidth(context),
-          child: SingleChildScrollView(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('Sign In', style: boldTextStyle(size: 24)),
-                30.height,
+    return SafeArea(
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
 
-                // EMAIL
-                TextFormField(
-                  controller: emailCont,
-                  style: primaryTextStyle(),
-                  decoration: InputDecoration(
-                    labelText: 'Email',
-                    contentPadding: EdgeInsets.all(16),
-                    labelStyle: secondaryTextStyle(),
-                    border: OutlineInputBorder(),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.0),
-                      borderSide: BorderSide(color: appColorPrimary),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.0),
-                      borderSide: BorderSide(
-                          color: appStore!.textSecondaryColor ?? Colors.blue),
-                    ),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  onFieldSubmitted: (_) =>
-                      FocusScope.of(context).requestFocus(passFocus),
-                  textInputAction: TextInputAction.next,
-                ),
-                16.height,
+        /// Drawer
+        drawer: DrawerWidget(),
 
-                // PASSWORD
-                TextFormField(
-                  obscureText: obscureText,
-                  focusNode: passFocus,
-                  controller: passCont,
-                  style: primaryTextStyle(),
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    contentPadding: EdgeInsets.all(16),
-                    labelStyle: secondaryTextStyle(),
-                    border: OutlineInputBorder(),
-                    focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.0),
-                        borderSide: BorderSide(color: appColorPrimary)),
-                    enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.0),
-                        borderSide: BorderSide(
-                            color: appStore!.textSecondaryColor ?? Colors.blue)),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                          obscureText ? Icons.visibility_off : Icons.visibility),
-                      onPressed: () {
-                        setState(() {
-                          obscureText = !obscureText;
-                        });
-                      },
-                    ),
-                  ),
-                ),
-                16.height,
-
-                // ERROR MESSAGE
-                if (errorMessage.isNotEmpty)
-                  Text(errorMessage,
-                          style: TextStyle(color: Colors.red, fontSize: 14))
-                      .paddingSymmetric(vertical: 8),
-
-                // SIGN IN BUTTON
-                Container(
-                  alignment: Alignment.center,
-                  padding: EdgeInsets.fromLTRB(20, 10, 20, 10),
-                  decoration: BoxDecoration(
-                      color: appColorPrimary,
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: defaultBoxShadow()),
-                  child: loading
-                      ? SizedBox(
-                          height: 24,
-                          width: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : Text('Sign In',
-                          style: boldTextStyle(color: white, size: 18)),
-                ).onTap(() {
-                  if (!loading &&
-                      emailCont.text.isNotEmpty &&
-                      passCont.text.isNotEmpty) {
-                    handleLogin();
-                  }
-                }),
-
-                10.height,
-
-                // REGISTER LINK
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Don't have an account? ",
-                      style: secondaryTextStyle(),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        // Navigate to your SignUp screen
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => SignUpScreen(),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        "Register",
-                        style: boldTextStyle(color: appColorPrimary),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+        /// HEADER
+        appBar: AppBar(
+          backgroundColor: Color(0xffe91e63),
+          elevation: 0,
+          centerTitle: true,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: Text(
+            "WomenBiz 360",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
-          ).center(),
+          ),
+        ),
+
+        /// BODY
+        body: SingleChildScrollView(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              /// TOP BANNER
+              Container(
+                width: double.infinity,
+                height: 180,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  image: DecorationImage(
+                    image: AssetImage("images/banner.png"),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+
+              25.height,
+
+              /// PAGE TITLE
+              Text('Sign In', style: boldTextStyle(size: 24)),
+
+              30.height,
+
+              /// EMAIL FIELD
+              TextFormField(
+                controller: emailCont,
+                style: primaryTextStyle(),
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.all(16),
+                ),
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                onFieldSubmitted: (_) =>
+                    FocusScope.of(context).requestFocus(passFocus),
+              ),
+
+              16.height,
+
+              /// PASSWORD FIELD
+              TextFormField(
+                controller: passCont,
+                focusNode: passFocus,
+                obscureText: obscureText,
+                style: primaryTextStyle(),
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.all(16),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      obscureText ? Icons.visibility_off : Icons.visibility,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        obscureText = !obscureText;
+                      });
+                    },
+                  ),
+                ),
+              ),
+
+              16.height,
+
+              /// ERROR MESSAGE
+              if (errorMessage.isNotEmpty)
+                Text(
+                  errorMessage,
+                  style: TextStyle(color: Colors.red, fontSize: 14),
+                ).paddingSymmetric(vertical: 8),
+
+              16.height,
+
+              /// SIGN IN BUTTON
+              Container(
+                alignment: Alignment.center,
+                padding: EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: appColorPrimary,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: defaultBoxShadow(),
+                ),
+                child: loading
+                    ? SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        'Sign In',
+                        style: boldTextStyle(color: white, size: 18),
+                      ),
+              ).onTap(() {
+                if (!loading &&
+                    emailCont.text.isNotEmpty &&
+                    passCont.text.isNotEmpty) {
+                  handleLogin();
+                }
+              }),
+
+              15.height,
+
+              /// REGISTER LINK
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Don't have an account? ",
+                    style: secondaryTextStyle(),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SignUpScreen(),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      "Register",
+                      style: boldTextStyle(color: appColorPrimary),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

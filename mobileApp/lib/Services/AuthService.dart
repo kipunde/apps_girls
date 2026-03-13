@@ -43,7 +43,7 @@ class AuthService {
       // Store all user fields in secure storage
       await _storage.write(key: 'auth_token', value: data['token']);
       await _storage.write(key: 'id', value: user['id']?.toString());
-      await _storage.write(key: 'name', value: user['fullname'] ?? '');
+      await _storage.write(key: 'name', value: user['name'] ?? '');
       await _storage.write(key: 'mobile', value: user['mobile'] ?? '');
       await _storage.write(key: 'email', value: user['email'] ?? '');
       await _storage.write(key: 'location', value: user['location'] ?? '');

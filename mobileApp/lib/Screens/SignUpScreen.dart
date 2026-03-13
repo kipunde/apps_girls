@@ -25,10 +25,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final passwordCont = TextEditingController();
   final passFocus = FocusNode();
 
-  final authService = AuthService(); // You can add register function here
+  final authService = AuthService();
 
-  // ----------------- HANDLE SIGN UP -----------------
-  void handleSignUp() async {
+  /// ---------------- HANDLE SIGN UP -----------------
+  Future<void> handleSignUp() async {
     if (fullnameCont.text.isEmpty ||
         emailCont.text.isEmpty ||
         passwordCont.text.isEmpty ||
@@ -43,21 +43,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
     });
 
     try {
-      // Replace this with your PHP register endpoint
       final response = await authService.register(
-        fullnameCont.text,
-        emailCont.text,
-        mobileCont.text,
+        fullnameCont.text.trim(),
+        emailCont.text.trim(),
+        mobileCont.text.trim(),
         passwordCont.text,
-        locationCont.text,
+        locationCont.text.trim(),
       );
 
       if (response) {
-        // Show success message
         toast("Registration successful! Please login.");
-
-        // Navigate to SignInScreen
-        SignInScreen().launch(context);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => SignInScreen()),
+        );
       } else {
         setState(() => errorMessage = "Registration failed");
       }
@@ -79,109 +78,144 @@ class _SignUpScreenState extends State<SignUpScreen> {
     super.dispose();
   }
 
+  /// ---------------- UI ----------------
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: appBar(context, 'Sign Up'),
-      body: Center(
-        child: Container(
-          width: dynamicWidth(context),
-          child: SingleChildScrollView(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Create Account', style: boldTextStyle(size: 24)),
-                30.height,
-
-                // FULLNAME
-                TextFormField(
-                  controller: fullnameCont,
-                  style: primaryTextStyle(),
-                  decoration: InputDecoration(
-                    labelText: 'Full Name',
-                    border: OutlineInputBorder(),
+    return SafeArea(
+      child: Scaffold(
+        /// HEADER
+        appBar: AppBar(
+          backgroundColor: const Color(0xffe91e63),
+          elevation: 0,
+          centerTitle: true,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: const Text(
+            "WomenBiz 360",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              /// TOP BANNER
+              Container(
+                width: double.infinity,
+                height: 180,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  image: const DecorationImage(
+                    image: AssetImage("images/banner.png"),
+                    fit: BoxFit.cover,
                   ),
                 ),
-                16.height,
+              ),
+              25.height,
 
-                // EMAIL
-                TextFormField(
-                  controller: emailCont,
-                  style: primaryTextStyle(),
-                  decoration: InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
+              /// PAGE TITLE
+              const Text('Create Account', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              30.height,
+
+              /// FULLNAME
+              TextFormField(
+                controller: fullnameCont,
+                style: primaryTextStyle(),
+                decoration: const InputDecoration(
+                  labelText: 'Full Name',
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.all(16),
                 ),
-                16.height,
+              ),
+              16.height,
 
-                // MOBILE
-                TextFormField(
-                  controller: mobileCont,
-                  style: primaryTextStyle(),
-                  decoration: InputDecoration(
-                    labelText: 'Mobile',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.phone,
+              /// EMAIL
+              TextFormField(
+                controller: emailCont,
+                style: primaryTextStyle(),
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.all(16),
                 ),
-                16.height,
+                keyboardType: TextInputType.emailAddress,
+              ),
+              16.height,
 
-                // LOCATION
-                TextFormField(
-                  controller: locationCont,
-                  style: primaryTextStyle(),
-                  decoration: InputDecoration(
-                    labelText: 'Location',
-                    border: OutlineInputBorder(),
+              /// MOBILE
+              TextFormField(
+                controller: mobileCont,
+                style: primaryTextStyle(),
+                decoration: const InputDecoration(
+                  labelText: 'Mobile',
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.all(16),
+                ),
+                keyboardType: TextInputType.phone,
+              ),
+              16.height,
+
+              /// LOCATION
+              TextFormField(
+                controller: locationCont,
+                style: primaryTextStyle(),
+                decoration: const InputDecoration(
+                  labelText: 'Location',
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.all(16),
+                ),
+              ),
+              16.height,
+
+              /// PASSWORD
+              TextFormField(
+                controller: passwordCont,
+                focusNode: passFocus,
+                obscureText: obscureText,
+                style: primaryTextStyle(),
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  border: const OutlineInputBorder(),
+                  contentPadding: const EdgeInsets.all(16),
+                  suffixIcon: IconButton(
+                    icon: Icon(obscureText ? Icons.visibility_off : Icons.visibility),
+                    onPressed: () {
+                      setState(() => obscureText = !obscureText);
+                    },
                   ),
                 ),
-                16.height,
+              ),
+              16.height,
 
-                // PASSWORD
-                TextFormField(
-                  controller: passwordCont,
-                  focusNode: passFocus,
-                  obscureText: obscureText,
-                  style: primaryTextStyle(),
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    border: OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        obscureText ? Icons.visibility_off : Icons.visibility,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          obscureText = !obscureText;
-                        });
-                      },
+              /// ERROR MESSAGE
+              if (errorMessage.isNotEmpty)
+                Text(
+                  errorMessage,
+                  style: const TextStyle(color: Colors.red, fontSize: 14),
+                ).paddingSymmetric(vertical: 8),
+
+              16.height,
+
+              /// SIGN UP BUTTON
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: loading ? null : handleSignUp,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: appColorPrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                ),
-                16.height,
-
-                // ERROR MESSAGE
-                if (errorMessage.isNotEmpty)
-                  Text(
-                    errorMessage,
-                    style: TextStyle(color: Colors.red, fontSize: 14),
-                  ).paddingSymmetric(vertical: 8),
-
-                // SIGN UP BUTTON
-                Container(
-                  width: double.infinity,
-                  alignment: Alignment.center,
-                  padding: EdgeInsets.symmetric(vertical: 14),
-                  decoration: BoxDecoration(
-                    color: appColorPrimary,
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: defaultBoxShadow(),
-                  ),
                   child: loading
-                      ? SizedBox(
+                      ? const SizedBox(
                           height: 24,
                           width: 24,
                           child: CircularProgressIndicator(
@@ -189,15 +223,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             strokeWidth: 2,
                           ),
                         )
-                      : Text(
+                      : const Text(
                           'Sign Up',
-                          style: boldTextStyle(color: white, size: 18),
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
                         ),
-                ).onTap(() {
-                  if (!loading) handleSignUp();
-                }),
-              ],
-            ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

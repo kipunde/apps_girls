@@ -1,6 +1,12 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+
+import '../Models/Course.dart';
+import '../Services/ApiService.dart';
+import '../Services/AuthService.dart';
 import 'DrawerWidget.dart';
-import 'dart:io'; // for exit()
+import 'SignInScreen.dart';
+import 'CourseDetailPage.dart';
 
 class HomeScreen extends StatefulWidget {
   static String tag = "HomeScreen";
@@ -10,178 +16,250 @@ class HomeScreen extends StatefulWidget {
 }
 
 class HomeScreenState extends State<HomeScreen> {
+  final ApiService apiService = ApiService();
+  final AuthService authService = AuthService();
+
+  Future<List<Course>>? _coursesFuture;
+  int? userId;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkUserSession();
+  }
+
+  /// CHECK IF USER IS LOGGED IN
+  Future<void> _checkUserSession() async {
+    final user = await authService.getUserAccessDetails();
+
+    if (user == null) {
+      // NOT LOGGED IN → GO TO LOGIN
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => SignInScreen()),
+      );
+    } else {
+      // STORE USER ID
+   userId = int.tryParse(user.id ?? '0');
+      _loadCourses();
+    }
+  }
+
+  /// LOAD COURSES FROM API
+  void _loadCourses() {
+    setState(() {
+      _coursesFuture = apiService.getCourses();
+    });
+  }
+
+  /// REFRESH HANDLER
+  Future<void> _refreshCourses() async {
+    _loadCourses();
+    await _coursesFuture;
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        /// Drawer menu
         drawer: DrawerWidget(),
-
-        /// TOP HEADER
         appBar: AppBar(
-          backgroundColor: Color(0xffe91e63),
+          backgroundColor: const Color(0xffe91e63),
           elevation: 0,
           centerTitle: true,
-
-          /// LEFT BACK ARROW
           leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () {
-              exit(0); // exits the app
-            },
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => exit(0),
           ),
-
-          /// TITLE
-          title: Text(
+          title: const Text(
             "WomenBiz 360",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
           ),
-
-          /// RIGHT MENU
           actions: [
             Builder(
               builder: (context) => IconButton(
-                icon: Icon(Icons.menu, color: Colors.white),
-                onPressed: () {
-                  Scaffold.of(context).openDrawer();
-                },
+                icon: const Icon(Icons.menu, color: Colors.white),
+                onPressed: () => Scaffold.of(context).openDrawer(),
               ),
             ),
           ],
         ),
+        body: _coursesFuture == null
+            ? const Center(child: CircularProgressIndicator())
+            : RefreshIndicator(
+                onRefresh: _refreshCourses,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        /// TOP BANNER
+                        Container(
+                          height: 150,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            image: const DecorationImage(
+                              image: AssetImage("images/banner.png"),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 25),
+                        const Text(
+                          "Explore Our Courses",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          "Gain essential business, finance, and digital marketing skills through expert courses tailored for women entrepreneurs.",
+                          style: TextStyle(color: Colors.grey[700]),
+                        ),
+                        const SizedBox(height: 20),
 
-        /// MAIN BODY
-        body: SingleChildScrollView(
-          child: Container(
-            color: Colors.white,
-            padding: EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+                        /// COURSES
+                        FutureBuilder<List<Course>>(
+                          future: _coursesFuture,
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            }
+                            if (snapshot.hasError) {
+                              return Text(
+                                "Error: ${snapshot.error}",
+                                style: const TextStyle(color: Colors.red),
+                              );
+                            }
+                            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                              return const Text("No courses available.");
+                            }
 
-                // TOP BANNER
-                Container(
-                  height: 150, // fixed height
-                  width: double.infinity, // full width
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    image: DecorationImage(
-                      image: AssetImage("images/banner.png"),
-                      fit: BoxFit.cover, // fills the width and crops height if necessary
+                            final courses = snapshot.data!;
+                            return GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: courses.length,
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 12,
+                                mainAxisSpacing: 12,
+                                childAspectRatio: 0.8,
+                              ),
+                              itemBuilder: (context, index) =>
+                                  courseCard(courses[index]),
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ),
                 ),
-
-                SizedBox(height: 25),
-
-                /// SECTION TITLE
-                Text(
-                  "Explore Our Course",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-                SizedBox(height: 10),
-
-                Text(
-                  "Gain essential business, finance, and digital market skills through our expert courses tailored for women entrepreneur",
-                  style: TextStyle(
-                    color: Colors.grey[700],
-                  ),
-                ),
-
-                SizedBox(height: 20),
-
-                /// COURSE CARDS
-                Row(
-                  children: [
-
-                    /// CARD 1
-                    Expanded(
-                      child: courseCard(
-                        icon: Icons.business_center,
-                        title: "Business, Finance & Digital Training",
-                        description:
-                        "3 Modules learn to run & manage your business",
-                        button: "Join Now",
-                      ),
-                    ),
-
-                    SizedBox(width: 12),
-
-                    /// CARD 2
-                    Expanded(
-                      child: courseCard(
-                        icon: Icons.public,
-                        title: "Export & Import Readiness",
-                        description:
-                        "Learn how to prepare your business for international trade",
-                        button: "Enroll",
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
+              ),
       ),
     );
   }
 
-  /// COURSE CARD WIDGET
-  Widget courseCard({
-    required IconData icon,
-    required String title,
-    required String description,
-    required String button,
-  }) {
+  /// COURSE CARD
+  Widget courseCard(Course course) {
+    String shortDescription = course.description.length > 25
+        ? course.description.substring(0, 25) + "..."
+        : course.description;
+
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Color(0xfff3dede),
+        color: const Color(0xfff3dede),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-
-          Icon(icon, size: 40, color: Colors.blue),
-
-          SizedBox(height: 10),
-
+          course.thumbnail.isNotEmpty
+              ? Image.network(
+                  course.thumbnail,
+                  height: 70,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                )
+              : const Icon(Icons.school, size: 50, color: Colors.blue),
+          const SizedBox(height: 10),
           Text(
-            title,
+            course.title,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
-
-          SizedBox(height: 10),
-
+          const SizedBox(height: 6),
           Text(
-            description,
+            shortDescription,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 12),
+            style: const TextStyle(fontSize: 12),
           ),
-
-          SizedBox(height: 12),
-
-          ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () async {
+                if (course.isEnrolled) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => CourseDetailPage(course: course),
+                    ),
+                  );
+                } else {
+                  if (userId == null) return; // safeguard
+                  showDialog(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      title: Text("Enroll in ${course.title}?"),
+                      content: const Text(
+                          "Do you want to enroll in this course to access full content and modules?"),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text("Cancel"),
+                        ),
+                        TextButton(
+                          onPressed: () async {
+                            bool enrolled = await apiService.enrollCourse(
+                                course.id, userId!);
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text(enrolled
+                                      ? "Enrolled successfully!"
+                                      : "Enrollment failed")),
+                            );
+                            if (enrolled) {
+                            _loadCourses(); // reload page data
+                            }
+                          },
+                          child: const Text("Enroll"),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+              backgroundColor: course.isEnrolled ? Colors.green : Colors.orange,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8),
               ),
+              ),
+              child: Text(course.isEnrolled
+                  ? "Start Your Course"
+                  : "Enroll This Course"),
             ),
-            child: Text(button),
-          )
+          ),
         ],
       ),
     );
