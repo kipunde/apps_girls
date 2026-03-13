@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-
 import '../Models/UserAccessDetailModel.dart';
 import 'ServiceConstant.dart';
 
@@ -14,33 +13,25 @@ class AuthService {
     try {
       final response = await http.post(
         Uri.parse('${baseAPIPath}login_mobile.php'),
-        headers: {
-          "Content-Type": "application/json", // IMPORTANT
-        },
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-        }),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({'email': email, 'password': password}),
       );
 
-      // Debug response
       debugPrint("STATUS CODE: ${response.statusCode}");
       debugPrint("LOGIN RESPONSE BODY: ${response.body}");
 
       if (response.statusCode != 200) {
-        throw Exception('Error! Login failed with status ${response.statusCode}');
+        throw Exception('Login failed with status ${response.statusCode}');
       }
 
       final data = jsonDecode(response.body);
-
       if (data['code'] != 200) {
         throw Exception(data['message'] ?? 'Invalid email or password');
       }
 
-      // Extract user object
       final user = data['user'];
 
-      // Store all user fields in secure storage
+      // Store user fields in secure storage
       await _storage.write(key: 'auth_token', value: data['token']);
       await _storage.write(key: 'id', value: user['id']?.toString());
       await _storage.write(key: 'name', value: user['name'] ?? '');
@@ -62,19 +53,17 @@ class AuthService {
   }
 
   /// GET STORED TOKEN
-  Future<String?> getToken() async {
-    return await _storage.read(key: 'auth_token');
-  }
+  Future<String?> getToken() async => await _storage.read(key: 'auth_token');
 
   /// LOGOUT USER
   Future<void> logout() async {
-    await _storage.deleteAll();
+    await _storage.deleteAll(); // clear all secure storage
   }
 
-  /// GET USER DETAILS FOR DASHBOARD / DRAWER
+  /// GET USER DETAILS
   Future<UserAccessDetailModel?> getUserAccessDetails() async {
     final id = await _storage.read(key: 'id');
-    if (id == null || id.isEmpty) return null;
+    if (id == null) return null;
 
     return UserAccessDetailModel(
       id: id,
@@ -90,7 +79,8 @@ class AuthService {
       designation: await _storage.read(key: 'designation'),
     );
   }
-  
+
+  /// REGISTER USER
   Future<bool> register(
     String fullname,
     String email,
@@ -98,21 +88,21 @@ class AuthService {
     String password,
     String location,
   ) async {
-  final response = await http.post(
-    Uri.parse('${baseAPIPath}register.php'),
-    headers: {"Content-Type": "application/json"},
-    body: jsonEncode({
-      'fullname': fullname,
-      'email': email,
-      'mobile': mobile,
-      'password': password,
-      'location': location,
-    }),
-  );
+    final response = await http.post(
+      Uri.parse('${baseAPIPath}register.php'),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        'fullname': fullname,
+        'email': email,
+        'mobile': mobile,
+        'password': password,
+        'location': location,
+      }),
+    );
 
-  if (response.statusCode != 200) return false;
+    if (response.statusCode != 200) return false;
 
-  final data = jsonDecode(response.body);
-  return data['code'] == 200;
-}
+    final data = jsonDecode(response.body);
+    return data['code'] == 200;
+  }
 }
