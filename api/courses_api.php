@@ -514,13 +514,15 @@ case 'remove_module_user':
  case 'list_module_attachments':
 
     $stmt = $conn->prepare("
-        SELECT 
-            a.*, 
-            m.title AS module_title
-        FROM module_attachments a
-        LEFT JOIN modules m ON m.id = a.module_id
-        ORDER BY a.id DESC
-    ");
+    SELECT 
+        a.*, 
+        m.title AS module_title,
+        c.title AS course_title
+    FROM module_attachments a
+    LEFT JOIN modules m ON m.id = a.module_id
+    LEFT JOIN courses c ON c.id = m.course_id
+    ORDER BY a.id DESC
+");
     $stmt->execute();
     $result = $stmt->get_result();
 

@@ -7,10 +7,16 @@ export default {
   data() {
     return {
       loading: false,
+      saving: false,
+      editingId: null,
       filters: { search: "" },
+
+      coursesList: [],    // All courses
+      modulesList: [],    // All modules from backend
       attachments: [],
-      modulesList: [],
+
       attachmentForm: {
+        course_id: null,
         module_id: null,
         title: "",
         attachment_type: "document",
@@ -19,25 +25,34 @@ export default {
         external_url: "",
         description: ""
       },
-      saving: false,
-      editingId: null,
+
       columns: [
         { title: "ID", dataIndex: "id", key: "id" },
+        { title: "Course", dataIndex: "course_title", key: "course_title" },
         { title: "Module", dataIndex: "module_title", key: "module_title" },
         { title: "Title", dataIndex: "title", key: "title" },
-        { title: "Type", dataIndex: "attachment_type", key: "attachment_type" },
         { title: "File / Link", key: "file_url" },
         { title: "Created On", dataIndex: "created_at", key: "created_at" },
         { title: "Action", key: "action" }
       ]
     };
   },
+
   computed: {
     filteredAttachments() {
       const q = this.filters.search.toLowerCase();
       return this.attachments.filter(a => a.title.toLowerCase().includes(q));
+    },
+
+    // Filter modules by selected course
+    filteredModules() {
+      if (!this.attachmentForm.course_id) return [];
+      return this.modulesList.filter(
+        m => m.course_id === this.attachmentForm.course_id
+      );
     }
   },
+
   watch: {
     "attachmentForm.attachment_type"(newType) {
       if (newType === "link") {
@@ -46,15 +61,49 @@ export default {
       } else {
         this.attachmentForm.external_url = "";
       }
+    },
+
+    // Reset module selection when course changes
+    "attachmentForm.course_id"(newCourseId) {
+      this.attachmentForm.module_id = null;
+      // Optionally auto-select first module:
+      const modules = this.modulesList.filter(m => m.course_id === newCourseId);
+      if (modules.length) this.attachmentForm.module_id = modules[0].id;
     }
   },
+
   methods: {
+    // Fetch all courses
+    async fetchCourses() {
+      try {
+        const res = await apiService.getCourses();
+        if (res.code === 200) this.coursesList = res.courses;
+      } catch (err) {
+        console.error(err);
+      }
+    },
+
+    // Fetch all modules (all courses)
+    async fetchModules() {
+      try {
+        const res = await apiService.getModules(); // Returns all modules
+        if (res.code === 200) this.modulesList = res.modules;
+      } catch (err) {
+        console.error(err);
+      }
+    },
+
+    // Fetch attachments
     async fetchAttachments() {
       this.loading = true;
       try {
         const res = await apiService.getModuleAttachments();
         if (res.code === 200) {
-          this.attachments = res.attachments.map(a => ({ ...a, module_title: a.module_title || "-" }));
+          this.attachments = res.attachments.map(a => ({
+            ...a,
+            module_title: a.module_title || "-",
+            course_title: a.course_title || "-"
+          }));
         }
       } catch (err) {
         console.error(err);
@@ -62,19 +111,11 @@ export default {
         this.loading = false;
       }
     },
-    async fetchModules() {
-      try {
-        const res = await apiService.getModules();
-        if (res.code === 200) {
-          this.modulesList = res.modules.map(m => ({ id: m.id, title: m.title }));
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    },
+
     addAttachment() {
       this.editingId = null;
       this.attachmentForm = {
+        course_id: null,
         module_id: null,
         title: "",
         attachment_type: "document",
@@ -87,9 +128,11 @@ export default {
       const modal = Modal.getInstance(modalEl) || new Modal(modalEl);
       modal.show();
     },
+
     editAttachment(record) {
       this.editingId = record.id;
-      this.attachmentForm.module_id = record.module_id;
+      this.attachmentForm.course_id = record.course_id || null;
+      this.attachmentForm.module_id = record.module_id || null;
       this.attachmentForm.title = record.title;
       this.attachmentForm.attachment_type = record.attachment_type;
       this.attachmentForm.description = record.description;
@@ -108,6 +151,7 @@ export default {
       const modal = Modal.getInstance(modalEl) || new Modal(modalEl);
       modal.show();
     },
+
     onFileChange(event) {
       const file = event.target.files[0];
       if (file) {
@@ -115,8 +159,10 @@ export default {
         this.attachmentForm.file_preview = file.name;
       }
     },
+
     async saveAttachment() {
       if (
+        !this.attachmentForm.course_id ||
         !this.attachmentForm.module_id ||
         !this.attachmentForm.title ||
         !this.attachmentForm.attachment_type
@@ -129,18 +175,18 @@ export default {
 
       try {
         const payload = {
+          course_id: this.attachmentForm.course_id,
           module_id: this.attachmentForm.module_id,
           title: this.attachmentForm.title,
           attachment_type: this.attachmentForm.attachment_type,
           description: this.attachmentForm.description,
-          external_url: this.attachmentForm.attachment_type === "link"
-            ? this.attachmentForm.external_url
-            : null
+          external_url:
+            this.attachmentForm.attachment_type === "link"
+              ? this.attachmentForm.external_url
+              : null
         };
 
-        if (this.attachmentForm.file) {
-          payload.file = this.attachmentForm.file;
-        }
+        if (this.attachmentForm.file) payload.file = this.attachmentForm.file;
 
         let response;
         if (this.editingId) {
@@ -159,6 +205,7 @@ export default {
 
           this.editingId = null;
           this.attachmentForm = {
+            course_id: null,
             module_id: null,
             title: "",
             attachment_type: "document",
@@ -172,13 +219,8 @@ export default {
           const modalEl = document.getElementById("attachmentModal");
           Modal.getInstance(modalEl)?.hide();
         } else {
-          Swal.fire(
-            "Error",
-            response.message || "Failed to save attachment",
-            "error"
-          );
+          Swal.fire("Error", response.message || "Failed to save attachment", "error");
         }
-
       } catch (err) {
         console.error("Save attachment error:", err);
         Swal.fire("Error", "Failed to save attachment", "error");
@@ -186,6 +228,7 @@ export default {
         this.saving = false;
       }
     },
+
     async deleteAttachment(record) {
       const result = await Swal.fire({
         title: "Are you sure?",
@@ -194,6 +237,7 @@ export default {
         showCancelButton: true
       });
       if (!result.isConfirmed) return;
+
       try {
         const res = await apiService.deleteModuleAttachment(record.id);
         if (res.code === 200) {
@@ -206,7 +250,9 @@ export default {
       }
     }
   },
+
   mounted() {
+    this.fetchCourses();
     this.fetchModules();
     this.fetchAttachments();
   }
@@ -219,7 +265,6 @@ export default {
 
   <div class="page-wrapper">
     <div class="content">
-      <!-- Page header -->
       <div class="page-header d-flex justify-content-between align-items-center mb-3">
         <div class="page-title">
           <h4>Module Attachments</h4>
@@ -230,7 +275,7 @@ export default {
         </button>
       </div>
 
-      <!-- Search/filter -->
+      <!-- Search -->
       <div class="d-flex mb-3">
         <input
           type="text"
@@ -241,12 +286,16 @@ export default {
         <button class="btn btn-primary ms-2" @click="filters.search=''">Clear</button>
       </div>
 
-      <!-- Table -->
+      <!-- Attachments Table -->
       <div class="card table-list-card">
         <div class="card-body table-responsive">
-          <a-table :columns="columns" :data-source="filteredAttachments" :loading="loading" rowKey="id">
+          <a-table
+            :columns="columns"
+            :data-source="filteredAttachments"
+            :loading="loading"
+            rowKey="id"
+          >
             <template #bodyCell="{ column, record }">
-              <!-- Action buttons -->
               <template v-if="column.key === 'action'">
                 <div class="edit-delete-action">
                   <a @click="editAttachment(record)" class="me-2"><vue-feather type="edit-2" /></a>
@@ -254,15 +303,17 @@ export default {
                 </div>
               </template>
 
-              <!-- File / URL -->
               <template v-else-if="column.key === 'file_url'">
-                <a v-if="record.file_url || record.external_url" :href="record.file_url || record.external_url" target="_blank">
+                <a
+                  v-if="record.file_url || record.external_url"
+                  :href="record.file_url || record.external_url"
+                  target="_blank"
+                >
                   Open
                 </a>
                 <span v-else>—</span>
               </template>
 
-              <!-- Default -->
               <template v-else>
                 <span>{{ record[column.dataIndex] }}</span>
               </template>
@@ -273,7 +324,7 @@ export default {
     </div>
   </div>
 
-  <!-- Modal -->
+  <!-- Add/Edit Modal -->
   <div class="modal fade" id="attachmentModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
@@ -282,12 +333,22 @@ export default {
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <!-- Module -->
+
+          <!-- Course -->
+          <div class="mb-3">
+            <label class="form-label">Course</label>
+            <select v-model="attachmentForm.course_id" class="form-select">
+              <option disabled value="">Select Course</option>
+              <option v-for="c in coursesList" :key="c.id" :value="c.id">{{ c.title }}</option>
+            </select>
+          </div>
+
+          <!-- Module (filtered by course) -->
           <div class="mb-3">
             <label class="form-label">Module</label>
             <select v-model="attachmentForm.module_id" class="form-select">
               <option disabled value="">Select Module</option>
-              <option v-for="m in modulesList" :key="m.id" :value="m.id">{{ m.title }}</option>
+              <option v-for="m in filteredModules" :key="m.id" :value="m.id">{{ m.title }}</option>
             </select>
           </div>
 
@@ -308,7 +369,7 @@ export default {
             </select>
           </div>
 
-          <!-- File upload -->
+          <!-- File -->
           <div v-if="attachmentForm.attachment_type !== 'link'" class="mb-3">
             <label class="form-label">Upload File</label>
             <input type="file" @change="onFileChange" class="form-control" />
@@ -318,9 +379,7 @@ export default {
                 v-if="attachmentForm.file_preview.startsWith('http')"
                 :href="attachmentForm.file_preview"
                 target="_blank"
-              >
-                View File
-              </a>
+              >View File</a>
               <span v-else>{{ attachmentForm.file_preview }}</span>
             </div>
           </div>
@@ -336,6 +395,7 @@ export default {
             <label class="form-label">Description</label>
             <textarea v-model="attachmentForm.description" class="form-control"></textarea>
           </div>
+
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
