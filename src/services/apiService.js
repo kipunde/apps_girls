@@ -413,4 +413,106 @@ async deleteModule(id) {
     }
   },
 
+  // ************** MODULE ATTACHMENTS **************
+
+// GET ATTACHMENTS
+
+ async getModuleAttachments() {
+  try {
+
+    const response = await fetch(
+      `${BASE_URL}/courses_api.php?action=list_module_attachments`,
+      {
+        method: "GET",
+        credentials: "include"
+      }
+    );
+
+    const data = await response.json();
+
+    console.log("Attachments API RESPONSE:", data);
+
+    return data;
+
+  } catch (error) {
+    console.error("API Error:", error);
+    return { code: 500, attachments: [] };
+  }
+},
+
+// SAVE ATTACHMENT
+async saveModuleAttachment(attachment) {
+  console.log("data to update", attachment);
+  try {
+    const formData = new FormData();
+
+    for (const key in attachment) {
+      if (attachment[key] !== null && attachment[key] !== undefined) {
+        formData.append(key, attachment[key]);
+      }
+    }
+
+    const res = await fetch(`${BASE_URL}/courses_api.php?action=save_module_attachment`, {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+    });
+
+    return await res.json();
+
+  } catch (err) {
+    console.error("API saveModuleAttachment error:", err);
+    return { code: 500, message: "Failed to save attachment" };
+  }
+},
+
+// UPDATE ATTACHMENT
+async updateModuleAttachment(attachment) {
+  console.log("data to update", attachment);
+  try {
+    const formData = new FormData();
+
+    for (const key in attachment) {
+      if (attachment[key] !== null && attachment[key] !== undefined) {
+        formData.append(key, attachment[key]);
+      }
+    }
+
+    const res = await fetch(`${BASE_URL}/courses_api.php?action=update_module_attachment`, {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+    });
+
+    return await res.json();
+
+  } catch (err) {
+    console.error("API updateModuleAttachment error:", err);
+    return { code: 500, message: "Failed to update attachment" };
+  }
+},
+
+
+
+// DELETE ATTACHMENT
+async deleteModuleAttachment(id) {
+  try {
+    const formData = new FormData();
+    formData.append("id", id);
+
+    const res = await fetch(`${BASE_URL}/courses_api.php?action=delete_module_attachment`, {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+    });
+
+    return await res.json();
+
+  } catch (err) {
+    console.error("API deleteModuleAttachment error:", err);
+    return { code: 500, message: "Failed to delete attachment" };
+  }
+},
+
+
 };

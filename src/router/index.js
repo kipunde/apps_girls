@@ -6,7 +6,8 @@ import UserDashboard from '@/views/dashboard/sales-dashboard.vue'
 import UserList from '@/views/users/users-list.vue'
 import CourseList from '@/views/courses/course-list.vue'
 import CourseEnrollment from '@/views/courses/course-enrollment.vue'
-import ModuleList from '../views/modules/module-list.vue';
+import ModuleList from '@/views/modules/module-list.vue'
+import ModuleAttachment from '@/views/modules/module-attachment.vue'
 const routes = [
   {
     path: '/',
@@ -48,6 +49,12 @@ const routes = [
     path: '/modules/list',
     name: 'module-list',
     component: ModuleList
+  },
+
+   {
+    path: '/modules/attachments',
+    name: 'module-attachment',
+    component: ModuleAttachment
   },
 
 ];
