@@ -683,6 +683,63 @@ case 'delete_module_attachment':
 
 break;
 
+
+// list file based on type menu
+
+case 'list_attachments_by_type':
+
+    $stmt = $conn->prepare("
+        SELECT 
+            a.*, 
+            m.title AS module_title
+        FROM module_attachments a
+        LEFT JOIN modules m ON m.id = a.module_id
+        ORDER BY a.id DESC
+    ");
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $attachments = [];
+
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? "https" : "http";
+    $host = $_SERVER['HTTP_HOST'];
+    $basePath = dirname($_SERVER['SCRIPT_NAME']);
+
+    while ($row = $result->fetch_assoc()) {
+
+        // Handle uploaded file
+        $row['file_url'] = null;
+        if (!empty($row['file_path'])) {
+            $row['file_url'] = $protocol . "://" . $host . $basePath . "/uploads/modules/" . $row['file_path'];
+        }
+
+        // Handle external URL only if no uploaded file
+        if (empty($row['file_path']) && !empty($row['external_url'])) {
+            $link = trim($row['external_url']);
+
+            if (preg_match('/^https?:\/\//i', $link)) {
+                $row['file_url'] = $link;
+            } elseif (stripos($link, 'www.') === 0) {
+                $row['file_url'] = "https://" . $link;
+            } else {
+                // Invalid external link, do not map to local path
+                $row['file_url'] = null;
+            }
+        }
+
+        // Keep external_url field for reference if needed
+        $row['external_url'] = !empty($row['external_url']) ? $row['external_url'] : null;
+
+        $attachments[] = $row;
+    }
+
+    echo json_encode([
+        "code" => 200,
+        "attachments" => $attachments
+    ]);
+
+break;
+
         // ------------------- ADMIN: GET USERS -------------------
         case 'get_users':
             $result = $conn->query("SELECT id, fullname FROM users ORDER BY fullname ASC");

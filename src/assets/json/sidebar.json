@@ -60,7 +60,7 @@
         ]
       },
       {
-        "menuValue": "Course Materials",
+        "menuValue": "Materials",
         "icon": "file-text",
         "active_link": "materials",
         "hasSubRoute": true,
@@ -92,12 +92,8 @@
             "route": "/quiz/questions"
           },
           {
-            "menuValue": "Create Question",
-            "route": "/quiz/create"
-          },
-          {
             "menuValue": "User Answers",
-            "route": "/quiz/answers"
+            "route": "/quiz/user-answers"
           }
         ]
       },
@@ -110,15 +106,15 @@
         "subMenus": [
           {
             "menuValue": "Schedule Class",
-            "route": "/live-classes/create"
+            "route": "/live/create"
           },
           {
             "menuValue": "All Classes",
-            "route": "/live-classes"
+            "route": "/live/live-classes"
           },
           {
             "menuValue": "Class Participants",
-            "route": "/live-classes/participants"
+            "route": "/live/participants"
           }
         ]
       },
