@@ -25,7 +25,7 @@ class ApiService {
       );
 
       if (response.statusCode == 401) {
-         print("Error: ${response.statusCode} - ${response.body}");
+        print("Error: ${response.statusCode} - ${response.body}");
         throw Exception("Session expired. Please login again.");
       }
 
@@ -36,74 +36,76 @@ class ApiService {
       final Map<String, dynamic> jsonData = jsonDecode(response.body);
 
       final List coursesData = jsonData['courses'] ?? [];
+      print("Course list $coursesData");
 
+      // FIXED: Call fromJson with only one argument
       return coursesData.map((e) => Course.fromJson(e)).toList();
     } catch (e) {
       throw Exception("Error fetching courses: $e");
     }
   }
 
-  // Example method to enroll course
+  /// ENROLL COURSE
   Future<bool> enrollCourse(int courseId, int userId) async {
-  print("Course and user are: $courseId , $userId");
+    print("Course and user are: $courseId , $userId");
 
-  try {
-    final response = await http.post(
-      Uri.parse('${baseAPIPath}enroll_course.php'),
-      body: {
-        'user_id': userId.toString(),
-        'course_id': courseId.toString(),
-      },
-    );
+    try {
+      final response = await http.post(
+        Uri.parse('${baseAPIPath}enroll_course.php'),
+        body: {
+          'user_id': userId.toString(),
+          'course_id': courseId.toString(),
+        },
+      );
 
-    print("Status code: ${response.statusCode}");
-    print("API response: ${response.body}");
+      print("Status code: ${response.statusCode}");
+      print("API response: ${response.body}");
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data['code'] == 200;
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['code'] == 200;
+      }
+
+      return false;
+    } catch (e) {
+      print("Enroll error: $e");
+      return false;
     }
+  }
 
-    return false;
-  } catch (e) {
-    print("Enroll error: $e");
-    return false;
+  /// GET USER COURSES
+  Future<List<Course>> getUserCourses(int userId) async {
+    print("Fetching courses for user id: $userId");
+
+    try {
+      final response = await http.post(
+        Uri.parse('${baseAPIPath}user_course.php'),
+        body: {
+          'user_id': userId.toString(),
+        },
+      );
+
+      print("Status code: ${response.statusCode}");
+      print("API response: ${response.body}");
+
+      if (response.statusCode != 200) {
+        throw Exception(
+            "Failed to load user courses: HTTP ${response.statusCode}");
+      }
+
+      final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+
+      if (jsonResponse['code'] != 200) {
+        throw Exception("API Error: ${jsonResponse['message']}");
+      }
+
+      final List data = jsonResponse['courses'] ?? [];
+
+      // FIXED: Call fromJson with only one argument
+      return data.map((json) => Course.fromJson(json)).toList();
+    } catch (e) {
+      print("Error fetching courses: $e");
+      rethrow;
+    }
   }
 }
-
-
-// Example method to enroll course
- Future<List<Course>> getUserCourses(int userId) async {
-  print("Fetching courses for user id: $userId");
-
-  try {
-    final response = await http.post(
-      Uri.parse('${baseAPIPath}user_course.php'),
-      body: {
-        'user_id': userId.toString(),
-      },
-    );
-
-    print("Status code: ${response.statusCode}");
-    print("API response: ${response.body}");
-
-    if (response.statusCode != 200) {
-      throw Exception("Failed to load user courses: HTTP ${response.statusCode}");
-    }
-
-    final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
-
-    if (jsonResponse['code'] != 200) {
-      throw Exception("API Error: ${jsonResponse['message']}");
-    }
-
-    final List data = jsonResponse['courses'] ?? [];
-    return data.map((json) => Course.fromJson(json)).toList();
-  } catch (e) {
-    print("Error fetching courses: $e");
-    rethrow;
-  }
-}
-
-  
-  }

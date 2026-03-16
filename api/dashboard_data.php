@@ -34,11 +34,11 @@ try {
     $totalStudent = (int)$conn->query("SELECT COUNT(*) as cnt FROM users WHERE role!='admin'")->fetch_assoc()['cnt'];
     $totalCourses = (int)$conn->query("SELECT COUNT(*) as cnt FROM courses")->fetch_assoc()['cnt'];
     $totalModules = (int)$conn->query("SELECT COUNT(*) as cnt FROM modules")->fetch_assoc()['cnt'];
-
+    $material = (int)$conn->query("SELECT COUNT(*) as cnt FROM module_attachments")->fetch_assoc()['cnt'];
     // --- Quick stats ---
     $totalUsers=$totalUsers;
     $students = $totalStudent;
-    $material = 0; // example static value
+    $material = $material;
     $courses = $totalCourses;
     $modules = $totalModules;
 

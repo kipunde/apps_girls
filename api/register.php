@@ -10,7 +10,7 @@ $password = $input['password'] ?? $_POST['password'] ?? '';
 $mobile = $input['mobile'] ?? $_POST['mobile'] ?? '';
 $location = $input['location'] ?? $_POST['location'] ?? '';
 $role = "user";
-$status = "1";
+$status = "2";
 $profile_pic = '';
 
 // Handle profile picture if uploaded via form-data

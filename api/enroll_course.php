@@ -28,8 +28,8 @@ if (!$user_id || !$course_id) {
 }
 
 // Check duplicate enrollment
-$check = $conn->prepare("SELECT id FROM course_enrollments WHERE user_id=? AND course_id=?");
-$check->bind_param("ii", $user_id, $course_id);
+$check = $conn->prepare("SELECT id, user_id, status FROM course_enrollments WHERE user_id = ? AND status IN ('enrolled','in_progress')");
+$check->bind_param("i", $user_id);
 $check->execute();
 $check->store_result();
 

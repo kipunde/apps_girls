@@ -4,7 +4,8 @@ class Course {
   final String description;
   final String thumbnail;
   final String status;
-  final bool isEnrolled; // NEW FIELD
+  final bool isEnrolled;
+  final int? userId; // NEW FIELD
 
   Course({
     required this.id,
@@ -12,7 +13,8 @@ class Course {
     required this.description,
     required this.thumbnail,
     required this.status,
-    this.isEnrolled = false, // default false
+    this.isEnrolled = false,
+    this.userId, // optional, null if not enrolled
   });
 
   factory Course.fromJson(Map<String, dynamic> json) {
@@ -23,6 +25,7 @@ class Course {
       thumbnail: json['thumbnail'] ?? '',
       status: json['status'] ?? '',
       isEnrolled: json['user_id'] != null && json['user_id'].toString().isNotEmpty,
+      userId: json['user_id'] != null ? int.tryParse(json['user_id'].toString()) : null,
     );
   }
 }

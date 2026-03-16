@@ -40,7 +40,7 @@ class HomeScreenState extends State<HomeScreen> {
       );
     } else {
       // STORE USER ID
-   userId = int.tryParse(user.id ?? '0');
+      userId = int.tryParse(user.id ?? '0');
       _loadCourses();
     }
   }
@@ -48,10 +48,52 @@ class HomeScreenState extends State<HomeScreen> {
   /// LOAD COURSES FROM API
   void _loadCourses() {
     setState(() {
-      _coursesFuture = apiService.getCourses();
+      _coursesFuture = _fetchCoursesForUser();
     });
   }
 
+  /// Fetch courses and mark enrolled for the current user
+ /// Fetch courses and prevent duplicates
+Future<List<Course>> _fetchCoursesForUser() async {
+  if (userId == null) return [];
+
+  final apiResponse = await apiService.getCourses();
+  final loggedUserId = userId ?? 0;
+
+  // Use a Map to prevent duplicates
+  final Map<int, Course> uniqueCourses = {};
+
+  for (var course in apiResponse) {
+    // Update isEnrolled only for the logged user
+    final isEnrolledForUser = course.isEnrolled && (loggedUserId == course.userId);
+
+    if (!uniqueCourses.containsKey(course.id)) {
+      uniqueCourses[course.id] = Course(
+        id: course.id,
+        title: course.title,
+        description: course.description,
+        thumbnail: course.thumbnail,
+        status: course.status,
+        isEnrolled: isEnrolledForUser,
+        userId: course.userId,
+      );
+    } else {
+      // If course already exists, make sure isEnrolled is true if any entry shows enrolled
+      final existing = uniqueCourses[course.id]!;
+      uniqueCourses[course.id] = Course(
+        id: existing.id,
+        title: existing.title,
+        description: existing.description,
+        thumbnail: existing.thumbnail,
+        status: existing.status,
+        isEnrolled: existing.isEnrolled || isEnrolledForUser,
+        userId: existing.userId ?? course.userId,
+      );
+    }
+  }
+
+  return uniqueCourses.values.toList();
+}
   /// REFRESH HANDLER
   Future<void> _refreshCourses() async {
     _loadCourses();
@@ -236,10 +278,10 @@ class HomeScreenState extends State<HomeScreen> {
                               SnackBar(
                                   content: Text(enrolled
                                       ? "Enrolled successfully!"
-                                      : "Enrollment failed")),
+                                      : "Enrollment failed. Please complete your current course before enrolling in another.")),
                             );
                             if (enrolled) {
-                            _loadCourses(); // reload page data
+                              _loadCourses(); // reload page data
                             }
                           },
                           child: const Text("Enroll"),
@@ -250,10 +292,10 @@ class HomeScreenState extends State<HomeScreen> {
                 }
               },
               style: ElevatedButton.styleFrom(
-              backgroundColor: course.isEnrolled ? Colors.green : Colors.orange,
-              shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-              ),
+                backgroundColor: course.isEnrolled ? Colors.green : Colors.orange,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               child: Text(course.isEnrolled
                   ? "Start Your Course"
