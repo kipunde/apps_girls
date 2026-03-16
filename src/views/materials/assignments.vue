@@ -21,17 +21,20 @@ export default {
         title: "",
         attachment_type: "document",
         file: null,
-        content_type:"exam",
         file_preview: null,
+        content_type:"assignment",
         external_url: "",
         description: ""
       },
 
-       columns: [
+      columns: [
+        { title: "ID", dataIndex: "id", key: "id" },
         { title: "Course", dataIndex: "course_title", key: "course_title" },
         { title: "Module", dataIndex: "module_title", key: "module_title" },
-        { title: "Video", key: "file_url" },
-       { title: "Total views", dataIndex: "title", key: "title" },
+        { title: "Title", dataIndex: "title", key: "title" },
+        { title: "File / Link", key: "file_url" },
+        { title: "Created On", dataIndex: "created_at", key: "created_at" },
+        { title: "Action", key: "action" }
       ]
     };
   },
@@ -89,9 +92,8 @@ export default {
         console.error(err);
       }
     },
-
     // Fetch attachments
-  async fetchAttachments() {
+async fetchAttachments() {
   this.loading = true;
 
   try {
@@ -99,7 +101,7 @@ export default {
 
     if (res.code === 200) {
       const allowedExtensions = ["txt", "doc", "docx", "xls", "xlsx", "pdf","mp4", "mov", "avi", "mkv", "webm","mp3", "wav", "ogg", "m4a"];
-      const allowedContentTypes = ["view-document"];
+      const allowedContentTypes = ["assignment"];
 
       this.attachments = res.attachments
         .map(a => ({
@@ -121,7 +123,6 @@ export default {
     this.loading = false;
   }
 },
-
     addAttachment() {
       this.editingId = null;
       this.attachmentForm = {
@@ -129,8 +130,8 @@ export default {
         module_id: null,
         title: "",
         attachment_type: "document",
+        content_type:"assignment",
         file: null,
-        content_type:"exam",
         file_preview: null,
         external_url: "",
         description: ""
@@ -295,11 +296,12 @@ export default {
     <div class="content">
       <div class="page-header d-flex justify-content-between align-items-center mb-3">
         <div class="page-title">
-          <h4>Video Views</h4>
+          <h4>Assignment Attachments</h4>
+          <h6>Manage Assignment</h6>
         </div>
-        <!-- <button class="btn btn-added" @click="addAttachment">
-          <vue-feather type="plus-circle" class="me-2" /> Add examination
-        </button> -->
+        <button class="btn btn-added" @click="addAttachment">
+          <vue-feather type="plus-circle" class="me-2" /> Add Document
+        </button>
       </div>
 
       <!-- Search -->
@@ -386,13 +388,12 @@ export default {
           </div>
 
           <!-- Type -->
-             <div class="mb-3">
+            <div class="mb-3">
             <label class="form-label">Attachment Type</label>
             <select v-model="attachmentForm.attachment_type" class="form-select">
               <option value="document">Document</option>
               <option value="audio">Audio</option>
               <option value="video">Video</option>
-              <option value="link">External Link</option>
             </select>
           </div>
 

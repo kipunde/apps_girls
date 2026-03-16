@@ -21,6 +21,7 @@ export default {
         title: "",
         attachment_type: "document",
         file: null,
+         content_type:"Module",
         file_preview: null,
         external_url: "",
         description: ""
@@ -130,6 +131,7 @@ async fetchAttachments() {
         title: "",
         attachment_type: "document",
         file: null,
+         content_type:"Module",
         file_preview: null,
         external_url: "",
         description: ""
@@ -206,6 +208,7 @@ async fetchAttachments() {
           title: this.attachmentForm.title,
           attachment_type: this.attachmentForm.attachment_type,
           description: this.attachmentForm.description,
+          content_type: this.attachmentForm.content_type,
           external_url:
             this.attachmentForm.attachment_type === "link"
               ? this.attachmentForm.external_url

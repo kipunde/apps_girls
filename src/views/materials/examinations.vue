@@ -27,11 +27,14 @@ export default {
         description: ""
       },
 
-       columns: [
+      columns: [
+        { title: "ID", dataIndex: "id", key: "id" },
         { title: "Course", dataIndex: "course_title", key: "course_title" },
         { title: "Module", dataIndex: "module_title", key: "module_title" },
-        { title: "Video", key: "file_url" },
-       { title: "Total views", dataIndex: "title", key: "title" },
+        { title: "Title", dataIndex: "title", key: "title" },
+        { title: "File / Link", key: "file_url" },
+        { title: "Created On", dataIndex: "created_at", key: "created_at" },
+        { title: "Action", key: "action" }
       ]
     };
   },
@@ -99,7 +102,7 @@ export default {
 
     if (res.code === 200) {
       const allowedExtensions = ["txt", "doc", "docx", "xls", "xlsx", "pdf","mp4", "mov", "avi", "mkv", "webm","mp3", "wav", "ogg", "m4a"];
-      const allowedContentTypes = ["view-document"];
+      const allowedContentTypes = ["exam"];
 
       this.attachments = res.attachments
         .map(a => ({
@@ -295,11 +298,12 @@ export default {
     <div class="content">
       <div class="page-header d-flex justify-content-between align-items-center mb-3">
         <div class="page-title">
-          <h4>Video Views</h4>
+          <h4>Document Attachments for Examination</h4>
+          <h6>Manage Examination</h6>
         </div>
-        <!-- <button class="btn btn-added" @click="addAttachment">
+        <button class="btn btn-added" @click="addAttachment">
           <vue-feather type="plus-circle" class="me-2" /> Add examination
-        </button> -->
+        </button>
       </div>
 
       <!-- Search -->

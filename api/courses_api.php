@@ -571,6 +571,7 @@ case 'save_module_attachment':
 
     $module_id = $_POST['module_id'] ?? 0;
     $title = $_POST['title'] ?? '';
+    $content_type=$_POST['content_type'] ?? '';
     $external_url = $_POST['external_url'] ?? null; // get external URL if provided
 
     if (!$module_id || empty($title)) {
@@ -596,10 +597,10 @@ case 'save_module_attachment':
 
     // Prepare statement to insert including external_url
     $stmt = $conn->prepare("
-        INSERT INTO module_attachments (module_id, title, file_path, file_type, external_url) 
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO module_attachments (module_id, title, file_path, file_type, external_url,content_type) 
+        VALUES (?, ?, ?, ?, ?,?)
     ");
-    $stmt->bind_param("issss", $module_id, $title, $file_path, $file_type, $external_url);
+    $stmt->bind_param("isssss", $module_id, $title, $file_path, $file_type, $external_url,$content_type);
     $stmt->execute();
 
     echo json_encode(

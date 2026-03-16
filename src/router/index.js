@@ -22,6 +22,10 @@ import Downloads from '@/views/activity/video-views.vue'
 import UserReport from '@/views/reports/user-report.vue'
 import CourseReport from '@/views/reports/course-report.vue'
 import CourseEnrollmentReport from '@/views/reports/course-enrollment-report.vue'
+import Quizzes from '@/views/materials/quizzes.vue';
+import Assignments from '@/views/materials/assignments.vue';
+import Tests from '@/views/materials/tests.vue';
+import Examinations from '@/views/materials/examinations.vue';
 
 const routes = [
   {
@@ -91,9 +95,27 @@ const routes = [
   },
 
    {
-    path: '/quiz/questions',
-    name: 'questions',
-    component: Questions
+    path: '/materials/quizzes',
+    name: 'quizzes',
+    component: Quizzes
+  },
+
+   {
+    path: '/materials/assignments',
+    name: 'assignments',
+    component: Assignments
+  },
+
+   {
+    path: '/materials/tests',
+    name: 'tests',
+    component: Tests
+  },
+
+   {
+    path: '/materials/examinations',
+    name: 'examinations',
+    component: Examinations
   },
 
    {

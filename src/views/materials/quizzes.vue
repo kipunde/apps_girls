@@ -20,18 +20,21 @@ export default {
         module_id: null,
         title: "",
         attachment_type: "document",
+        content_type:"quiz",
         file: null,
-        content_type:"exam",
         file_preview: null,
         external_url: "",
         description: ""
       },
 
-       columns: [
+      columns: [
+        { title: "ID", dataIndex: "id", key: "id" },
         { title: "Course", dataIndex: "course_title", key: "course_title" },
         { title: "Module", dataIndex: "module_title", key: "module_title" },
-        { title: "Video", key: "file_url" },
-       { title: "Total views", dataIndex: "title", key: "title" },
+        { title: "Title", dataIndex: "title", key: "title" },
+        { title: "File / Link", key: "file_url" },
+        { title: "Created On", dataIndex: "created_at", key: "created_at" },
+        { title: "Action", key: "action" }
       ]
     };
   },
@@ -99,7 +102,7 @@ export default {
 
     if (res.code === 200) {
       const allowedExtensions = ["txt", "doc", "docx", "xls", "xlsx", "pdf","mp4", "mov", "avi", "mkv", "webm","mp3", "wav", "ogg", "m4a"];
-      const allowedContentTypes = ["view-document"];
+      const allowedContentTypes = ["quize"];
 
       this.attachments = res.attachments
         .map(a => ({
@@ -121,7 +124,6 @@ export default {
     this.loading = false;
   }
 },
-
     addAttachment() {
       this.editingId = null;
       this.attachmentForm = {
@@ -129,8 +131,8 @@ export default {
         module_id: null,
         title: "",
         attachment_type: "document",
+        content_type:"quiz",
         file: null,
-        content_type:"exam",
         file_preview: null,
         external_url: "",
         description: ""
@@ -207,7 +209,7 @@ export default {
           title: this.attachmentForm.title,
           attachment_type: this.attachmentForm.attachment_type,
           description: this.attachmentForm.description,
-          content_type: this.attachmentForm.content_type,
+           content_type: this.attachmentForm.content_type,
           external_url:
             this.attachmentForm.attachment_type === "link"
               ? this.attachmentForm.external_url
@@ -295,11 +297,12 @@ export default {
     <div class="content">
       <div class="page-header d-flex justify-content-between align-items-center mb-3">
         <div class="page-title">
-          <h4>Video Views</h4>
+          <h4>Attach Quizzes</h4>
+          <h6>Manage Quizzes</h6>
         </div>
-        <!-- <button class="btn btn-added" @click="addAttachment">
-          <vue-feather type="plus-circle" class="me-2" /> Add examination
-        </button> -->
+        <button class="btn btn-added" @click="addAttachment">
+          <vue-feather type="plus-circle" class="me-2" /> Add quizees
+        </button>
       </div>
 
       <!-- Search -->

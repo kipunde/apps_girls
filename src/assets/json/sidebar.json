@@ -67,31 +67,35 @@
         "showSubRoute": false,
         "subMenus": [
           {
-            "menuValue": "Documents",
+            "menuValue": "Module Documents",
             "route": "/materials/documents"
           },
           {
-            "menuValue": "Videos",
+            "menuValue": "Module Videos",
             "route": "/materials/videos"
           },
           {
-            "menuValue": "Audio",
+            "menuValue": "Module Audio",
             "route": "/materials/audio"
-          }
-        ]
-      },
-      {
-        "menuValue": "Quiz & Questions",
-        "icon": "help-circle",
-        "active_link": "quiz",
-        "hasSubRoute": true,
-        "showSubRoute": false,
-        "subMenus": [
-          {
-            "menuValue": "All Questions",
-            "route": "/quiz/questions"
           },
           {
+            "menuValue": "Quizzes",
+            "route": "/materials/quizzes"
+          },
+          {
+            "menuValue": "Assignments",
+            "route": "/materials/assignments"
+          },
+          {
+            "menuValue": "Tests",
+            "route": "/materials/tests"
+          },
+
+           {
+            "menuValue": "Examinations",
+            "route": "/materials/examinations"
+          },
+           {
             "menuValue": "User Answers",
             "route": "/quiz/user-answers"
           }

@@ -1,5 +1,5 @@
-const BASE_URL = "http://localhost/oddproject/api";
-//const BASE_URL = "https://prasperascons.com/app/api";
+//const BASE_URL = "http://localhost/oddproject/api";
+const BASE_URL = "https://prasperascons.com/app/api";
 
 export const apiService = {
   baseUrl: BASE_URL,
@@ -451,7 +451,7 @@ async saveModuleAttachment(attachment) {
         formData.append(key, attachment[key]);
       }
     }
-
+    console.log("Data",formData );
     const res = await fetch(`${BASE_URL}/courses_api.php?action=save_module_attachment`, {
       method: "POST",
       body: formData,

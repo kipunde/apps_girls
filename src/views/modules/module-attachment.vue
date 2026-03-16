@@ -21,6 +21,7 @@ export default {
         title: "",
         attachment_type: "document",
         file: null,
+        content_type:"Module",
         file_preview: null,
         external_url: "",
         description: ""
@@ -121,6 +122,7 @@ export default {
         attachment_type: "document",
         file: null,
         file_preview: null,
+        content_type:"Module",
         external_url: "",
         description: ""
       };
@@ -183,7 +185,8 @@ export default {
           external_url:
             this.attachmentForm.attachment_type === "link"
               ? this.attachmentForm.external_url
-              : null
+              : null,
+               content_type: this.attachmentForm.content_type
         };
 
         if (this.attachmentForm.file) payload.file = this.attachmentForm.file;
@@ -212,6 +215,7 @@ export default {
             file: null,
             file_preview: null,
             external_url: "",
+            content_type:'Module',
             description: ""
           };
 
