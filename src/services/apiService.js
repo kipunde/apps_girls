@@ -514,5 +514,86 @@ async deleteModuleAttachment(id) {
   }
 },
 
+// ---------------- QUIZ MANAGEMENT ----------------
+async getQuizzes() {
+  try {
+    const res = await fetch(`${BASE_URL}/quizzes_api.php?action=getQuiz`, {
+      credentials: "include",
+    });
+
+    const data = await res.json(); // parse JSON response
+    console.log("API Data:", data); // log the actual data
+
+    // Always ensure we have an array
+    const quizzes = (data.data || []).map(q => ({
+      ...q,
+      // Decode questions JSON string into array
+      questions: q.questions ? JSON.parse(q.questions) : []
+    }));
+
+    return { code: data.code, quizzes };
+
+  } catch (err) {
+    console.error("API getQuizzes error:", err);
+    return { code: 500, quizzes: [] };
+  }
+},
+// ---------------- SAVE QUIZ ----------------
+async saveQuiz(quiz) {
+  try {
+    // Send JSON directly
+    const res = await fetch(`${BASE_URL}/quizzes_api.php?action=saveQuiz`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(quiz),
+    });
+
+    const data = await res.json();
+    console.log("Save Quiz API response:", data);
+    return data;
+
+  } catch (err) {
+    console.error("API saveQuiz error:", err);
+    return { code: 500, message: "Failed to save quiz" };
+  }
+},
+
+// ---------------- UPDATE QUIZ ----------------
+async updateQuiz(quiz) {
+  try {
+    // Send JSON directly
+    const res = await fetch(`${BASE_URL}/quizzes_api.php?action=updateQuiz`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(quiz),
+    });
+
+    const data = await res.json();
+    console.log("Update Quiz API response:", data);
+    return data;
+
+  } catch (err) {
+    console.error("API updateQuiz error:", err);
+    return { code: 500, message: "Failed to update quiz" };
+  }
+},
+// ---------------- DELETE QUIZ ----------------
+async deleteQuiz(quizId) {
+  try {
+    const res = await fetch(`${BASE_URL}/quizzes_api.php?action=deleteQuiz&id=${quizId}`, {
+      method: "GET",   // your API uses GET for deletion
+      credentials: "include",
+    });
+    const data = await res.json();
+    return data;
+
+  } catch (err) {
+    console.error("Error deleting quiz:", err);
+    return { code: 500, message: "Failed to delete quiz" };
+  }
+},
+
 
 };

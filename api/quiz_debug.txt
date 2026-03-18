@@ -1,0 +1,66 @@
+SAVE INPUT: 
+SAVE INPUT: Array
+(
+    [course_id] => 19
+    [module_id] => 4
+    [title] => gfdgdg
+    [questions] => Array
+        (
+            [0] => Array
+                (
+                    [question] => xzzcdsfdsf
+                    [options] => Array
+                        (
+                            [0] => ewrewr
+                            [1] => ewrer
+                        )
+
+                    [correct_answer] => fdfgfg
+                    [score] => 1
+                )
+
+        )
+
+)
+
+SAVE INPUT: Array
+(
+    [course_id] => 19
+    [module_id] => 4
+    [title] => quize 1
+    [questions] => Array
+        (
+            [0] => Array
+                (
+                    [question] => 1+2=?
+                    [options] => Array
+                        (
+                            [0] => 1
+                            [1] => 3
+                            [2] => 6
+                            [3] => 12
+                        )
+
+                    [correct_answer] => 3
+                    [score] => 1
+                )
+
+            [1] => Array
+                (
+                    [question] => Tanzania capital city
+                    [options] => Array
+                        (
+                            [0] => Dodoma
+                            [1] => Dar es Salaam
+                            [2] => Mbeya
+                            [3] => Mwanza
+                        )
+
+                    [correct_answer] => Dodoma
+                    [score] => 1
+                )
+
+        )
+
+)
+

@@ -11,272 +11,222 @@ export default {
       editingId: null,
       filters: { search: "" },
 
-      coursesList: [],    // All courses
-      modulesList: [],    // All modules from backend
-      attachments: [],
+      coursesList: [],
+      modulesList: [],
+      quizzes: [],
 
-      attachmentForm: {
+      quizForm: {
         course_id: null,
         module_id: null,
         title: "",
-        attachment_type: "document",
-        content_type:"quiz",
-        file: null,
-        file_preview: null,
-        external_url: "",
-        description: ""
+        questions: [
+          {
+            question: "",
+            options: ["", "", "", ""],
+            correct_answer: "",
+            score: 1
+          }
+        ]
       },
 
       columns: [
-        { title: "ID", dataIndex: "id", key: "id" },
-        { title: "Course", dataIndex: "course_title", key: "course_title" },
-        { title: "Module", dataIndex: "module_title", key: "module_title" },
-        { title: "Title", dataIndex: "title", key: "title" },
-        { title: "File / Link", key: "file_url" },
-        { title: "Created On", dataIndex: "created_at", key: "created_at" },
+        { title: "ID", dataIndex: "id" },
+        { title: "Course", dataIndex: "course_name" },
+        { title: "Module", dataIndex: "module_name" },
+        { title: "Title", dataIndex: "title" },
+        { title: "Questions", dataIndex: "questions" },
+         { title: "Total Questions", key: "questions_count" },
+        { title: "Created At", dataIndex: "created_at" },
         { title: "Action", key: "action" }
       ]
     };
   },
 
   computed: {
-    filteredAttachments() {
+    filteredQuizzes() {
       const q = this.filters.search.toLowerCase();
-      return this.attachments.filter(a => a.title.toLowerCase().includes(q));
+      return this.quizzes.filter(a => a.title.toLowerCase().includes(q));
     },
 
-    // Filter modules by selected course
     filteredModules() {
-      if (!this.attachmentForm.course_id) return [];
-      return this.modulesList.filter(
-        m => m.course_id === this.attachmentForm.course_id
-      );
+      if (!this.quizForm.course_id) return [];
+      return this.modulesList.filter(m => m.course_id === this.quizForm.course_id);
     }
   },
 
   watch: {
-    "attachmentForm.attachment_type"(newType) {
-      if (newType === "link") {
-        this.attachmentForm.file = null;
-        this.attachmentForm.file_preview = null;
-      } else {
-        this.attachmentForm.external_url = "";
-      }
-    },
-
-    // Reset module selection when course changes
-    "attachmentForm.course_id"(newCourseId) {
-      this.attachmentForm.module_id = null;
+    "quizForm.course_id"(newCourseId) {
+      this.quizForm.module_id = null;
       const modules = this.modulesList.filter(m => m.course_id === newCourseId);
-      if (modules.length) this.attachmentForm.module_id = modules[0].id;
+      if (modules.length) this.quizForm.module_id = modules[0].id;
     }
   },
 
   methods: {
-    // Fetch all courses
     async fetchCourses() {
       try {
         const res = await apiService.getCourses();
         if (res.code === 200) this.coursesList = res.courses;
-      } catch (err) {
-        console.error(err);
-      }
+      } catch (err) { console.error(err); }
     },
 
-    // Fetch all modules
     async fetchModules() {
       try {
         const res = await apiService.getModules();
         if (res.code === 200) this.modulesList = res.modules;
-      } catch (err) {
-        console.error(err);
-      }
+      } catch (err) { console.error(err); }
     },
 
-    // Fetch attachments
-  async fetchAttachments() {
-  this.loading = true;
+    async fetchQuizzes() {
+      this.loading = true;
+      try {
+        const res = await apiService.getQuizzes();
+        if (res.code === 200) {
+          this.quizzes = res.quizzes.map(q => ({
+            ...q,
+            module_title: q.module_title || "-",
+            course_title: q.course_title || "-"
+          }));
+        }
+      } catch (err) { console.error(err); }
+      finally { this.loading = false; }
+    },
 
-  try {
-    const res = await apiService.getModuleAttachments();
-
-    if (res.code === 200) {
-      const allowedExtensions = ["txt", "doc", "docx", "xls", "xlsx", "pdf","mp4", "mov", "avi", "mkv", "webm","mp3", "wav", "ogg", "m4a"];
-      const allowedContentTypes = ["quize"];
-
-      this.attachments = res.attachments
-        .map(a => ({
-          ...a,
-          module_title: a.module_title || "-",
-          course_title: a.course_title || "-",
-          file_extension: a.file_path
-            ? a.file_path.split(".").pop().toLowerCase()
-            : ""
-        }))
-        .filter(a =>
-          allowedExtensions.includes(a.file_extension) &&
-          allowedContentTypes.includes((a.content_type || "").toLowerCase())
-        );
-    }
-  } catch (err) {
-    console.error("Error fetching attachments:", err);
-  } finally {
-    this.loading = false;
-  }
-},
-    addAttachment() {
+    addQuiz() {
       this.editingId = null;
-      this.attachmentForm = {
+      this.quizForm = {
         course_id: null,
         module_id: null,
         title: "",
-        attachment_type: "document",
-        content_type:"quiz",
-        file: null,
-        file_preview: null,
-        external_url: "",
-        description: ""
+        questions: [
+          { question: "", options: ["", "", "", ""], correct_answer: "", score: 1 }
+        ]
       };
-      const modalEl = document.getElementById("attachmentModal");
-      const modal = Modal.getInstance(modalEl) || new Modal(modalEl);
-      modal.show();
+      new Modal(document.getElementById("quizModal")).show();
     },
 
-    editAttachment(record) {
+    editQuiz(record) {
       this.editingId = record.id;
-      this.attachmentForm.course_id = record.course_id || null;
-      this.attachmentForm.module_id = record.module_id || null;
-      this.attachmentForm.title = record.title;
-      this.attachmentForm.attachment_type = record.attachment_type;
-      this.attachmentForm.description = record.description;
-
-      if (record.attachment_type === "link") {
-        this.attachmentForm.external_url = record.external_url || "";
-        this.attachmentForm.file = null;
-        this.attachmentForm.file_preview = null;
-      } else {
-        this.attachmentForm.file_preview = record.file_url || null;
-        this.attachmentForm.file = null;
-        this.attachmentForm.external_url = "";
-      }
-
-      const modalEl = document.getElementById("attachmentModal");
-      const modal = Modal.getInstance(modalEl) || new Modal(modalEl);
-      modal.show();
+      this.quizForm = {
+        course_id: record.course_id,
+        module_id: record.module_id,
+        title: record.title,
+        questions: record.questions.length
+          ? record.questions.map(q => ({
+              question: q.question,
+              options: q.options.length ? q.options : ["", "", "", ""],
+              correct_answer: q.correct_answer,
+              score: q.score
+            }))
+          : [{ question: "", options: ["", "", "", ""], correct_answer: "", score: 1 }]
+      };
+      new Modal(document.getElementById("quizModal")).show();
     },
 
-    // File upload with restriction
-    onFileChange(event) {
-      const file = event.target.files[0];
-      if (!file) return;
+    addQuestion() {
+      this.quizForm.questions.push({
+        question: "",
+        options: ["", "", "", ""],
+        correct_answer: "",
+        score: 1
+      });
+    },
 
-      const allowedExtensions = ["txt", "doc", "docx", "xls", "xlsx", "pdf","mp4", "mov", "avi", "mkv", "webm","mp3", "wav", "ogg", "m4a"];
-      const fileExtension = file.name.split('.').pop().toLowerCase();
+   formatQuestions(questions) {
+  if (!questions) return "";
+  return questions
+    .map((q, i) => `${i + 1}. ${q.question} ( Answer is ${q.correct_answer})`)
+    .join("<br/>");
+},
 
-      if (!allowedExtensions.includes(fileExtension)) {
-        Swal.fire(
-          "Invalid File",
-          "Only txt, doc, docx, pdf, csv, xls, xlsx files are allowed.",
-          "warning"
-        );
-        event.target.value = null;
-        this.attachmentForm.file = null;
-        this.attachmentForm.file_preview = null;
+    removeQuestion(index) {
+      this.quizForm.questions.splice(index, 1);
+    },
+
+    addOption(qIndex) {
+      this.quizForm.questions[qIndex].options.push("");
+    },
+
+    removeOption(qIndex, oIndex) {
+      this.quizForm.questions[qIndex].options.splice(oIndex, 1);
+    },
+
+    // ---------------- SAVE / UPDATE ----------------
+    async saveQuiz() {
+      // Basic form validation
+      if (!this.quizForm.course_id || !this.quizForm.module_id || !this.quizForm.title.trim()) {
+        Swal.fire("Validation", "Fill all required fields", "warning");
         return;
       }
 
-      this.attachmentForm.file = file;
-      this.attachmentForm.file_preview = file.name;
-    },
-
-    async saveAttachment() {
-      if (
-        !this.attachmentForm.course_id ||
-        !this.attachmentForm.module_id ||
-        !this.attachmentForm.title ||
-        !this.attachmentForm.attachment_type
-      ) {
-        Swal.fire("Validation", "Please fill all required fields", "warning");
-        return;
+      // Question validation
+      for (let q of this.quizForm.questions) {
+        const questionText = q.question?.trim();
+        const correctAnswer = q.correct_answer?.trim();
+        const optionsFilled = q.options.every(o => o.trim() !== "");
+        if (!questionText || !optionsFilled || !correctAnswer || q.score <= 0) {
+          Swal.fire(
+            "Validation",
+            "Complete all questions, options, assign marks, and define correct answer",
+            "warning"
+          );
+          return;
+        }
       }
 
       this.saving = true;
-
       try {
         const payload = {
-          course_id: this.attachmentForm.course_id,
-          module_id: this.attachmentForm.module_id,
-          title: this.attachmentForm.title,
-          attachment_type: this.attachmentForm.attachment_type,
-          description: this.attachmentForm.description,
-           content_type: this.attachmentForm.content_type,
-          external_url:
-            this.attachmentForm.attachment_type === "link"
-              ? this.attachmentForm.external_url
-              : null
+          course_id: this.quizForm.course_id,
+          module_id: this.quizForm.module_id,
+          title: this.quizForm.title.trim(),
+          questions: this.quizForm.questions.map(q => ({
+            question: q.question.trim(),
+            options: q.options.map(o => o.trim()),
+            correct_answer: q.correct_answer.trim(),
+            score: Number(q.score)
+          }))
         };
-
-        if (this.attachmentForm.file) payload.file = this.attachmentForm.file;
 
         let response;
         if (this.editingId) {
           payload.id = this.editingId;
-          response = await apiService.updateModuleAttachment(payload);
+          response = await apiService.updateQuiz(payload);
         } else {
-          response = await apiService.saveModuleAttachment(payload);
+          response = await apiService.saveQuiz(payload);
         }
 
         if (response.code === 200) {
-          Swal.fire(
-            "Success",
-            this.editingId ? "Attachment updated!" : "Attachment created!",
-            "success"
-          );
-
-          this.editingId = null;
-          this.attachmentForm = {
-            course_id: null,
-            module_id: null,
-            title: "",
-            attachment_type: "document",
-            file: null,
-            file_preview: null,
-            external_url: "",
-            description: ""
-          };
-
-          this.fetchAttachments();
-          const modalEl = document.getElementById("attachmentModal");
-          Modal.getInstance(modalEl)?.hide();
+          Swal.fire("Success", "Quiz saved!", "success");
+          this.fetchQuizzes();
+          Modal.getInstance(document.getElementById("quizModal"))?.hide();
         } else {
-          Swal.fire("Error", response.message || "Failed to save attachment", "error");
+          Swal.fire("Error", response.message || "Failed to save quiz", "error");
         }
       } catch (err) {
-        console.error("Save attachment error:", err);
-        Swal.fire("Error", "Failed to save attachment", "error");
+        console.error("API saveQuiz error:", err);
+        Swal.fire("Error", "Failed to save quiz", "error");
       } finally {
         this.saving = false;
       }
     },
 
-    async deleteAttachment(record) {
+    async deleteQuiz(record) {
       const result = await Swal.fire({
         title: "Are you sure?",
-        text: "This action cannot be undone!",
         icon: "warning",
         showCancelButton: true
       });
       if (!result.isConfirmed) return;
 
       try {
-        const res = await apiService.deleteModuleAttachment(record.id);
+        const res = await apiService.deleteQuiz(record.id);
         if (res.code === 200) {
-          Swal.fire("Deleted", "Attachment has been deleted", "success");
-          this.fetchAttachments();
+          Swal.fire("Deleted", "Quiz deleted", "success");
+          this.fetchQuizzes();
         }
       } catch (err) {
-        console.error(err);
-        Swal.fire("Error", "Failed to delete attachment", "error");
+        Swal.fire("Error", "Delete failed", "error");
       }
     }
   },
@@ -284,154 +234,107 @@ export default {
   mounted() {
     this.fetchCourses();
     this.fetchModules();
-    this.fetchAttachments();
+    this.fetchQuizzes();
   }
 };
 </script>
 
 <template>
-  <layout-header></layout-header>
-  <layout-sidebar></layout-sidebar>
+  <layout-header />
+  <layout-sidebar />
 
   <div class="page-wrapper">
     <div class="content">
-      <div class="page-header d-flex justify-content-between align-items-center mb-3">
-        <div class="page-title">
-          <h4>Attach Quizzes</h4>
-          <h6>Manage Quizzes</h6>
-        </div>
-        <button class="btn btn-added" @click="addAttachment">
-          <vue-feather type="plus-circle" class="me-2" /> Add quizees
-        </button>
+      <div class="d-flex justify-content-between mb-3">
+        <h4>Quiz Management</h4>
+        <button class="btn btn-primary" @click="addQuiz">+ Add Quiz</button>
       </div>
 
-      <!-- Search -->
-      <div class="d-flex mb-3">
-        <input
-          type="text"
-          v-model="filters.search"
-          class="form-control me-2"
-          placeholder="Search by title"
-        />
-        <button class="btn btn-primary ms-2" @click="filters.search=''">Clear</button>
-      </div>
+      <input v-model="filters.search" class="form-control mb-3" placeholder="Search..." />
 
-      <!-- Attachments Table -->
-      <div class="card table-list-card">
-        <div class="card-body table-responsive">
-          <a-table
-            :columns="columns"
-            :data-source="filteredAttachments"
-            :loading="loading"
-            rowKey="id"
-          >
-            <template #bodyCell="{ column, record }">
-              <template v-if="column.key === 'action'">
-                <div class="edit-delete-action">
-                  <a @click="editAttachment(record)" class="me-2"><vue-feather type="edit-2" /></a>
-                  <a @click="deleteAttachment(record)"><vue-feather type="trash-2" /></a>
-                </div>
-              </template>
+      <a-table :columns="columns" :data-source="filteredQuizzes" :loading="loading" rowKey="id">
+       <template #bodyCell="{ column, record }">
+  <!-- Total Questions -->
+  <template v-if="column.key === 'questions_count'">
+    {{ record.questions ? record.questions.length : 0 }}
+  </template>
 
-              <template v-else-if="column.key === 'file_url'">
-                <a
-                  v-if="record.file_url || record.external_url"
-                  :href="record.file_url || record.external_url"
-                  target="_blank"
-                >
-                  Open
-                </a>
-                <span v-else>—</span>
-              </template>
+  <!-- Questions (break line) -->
+  <template v-else-if="column.dataIndex === 'questions'">
+    <span v-html="formatQuestions(record.questions)"></span>
+  </template>
 
-              <template v-else>
-                <span>{{ record[column.dataIndex] }}</span>
-              </template>
-            </template>
-          </a-table>
-        </div>
-      </div>
+  <!-- Action -->
+  <template v-else-if="column.key === 'action'">
+    <button @click="editQuiz(record)">Edit</button>
+    <button @click="deleteQuiz(record)">Delete</button>
+  </template>
+
+  <!-- Default -->
+  <template v-else>
+    {{ record[column.dataIndex] }}
+  </template>
+</template>
+      </a-table>
     </div>
   </div>
 
-  <!-- Add/Edit Modal -->
-  <div class="modal fade" id="attachmentModal" tabindex="-1" aria-hidden="true">
+  <!-- QUIZ MODAL -->
+  <div class="modal fade" id="quizModal">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
+
         <div class="modal-header">
-          <h5 class="modal-title">{{ editingId ? "Edit Attachment" : "Add Attachment" }}</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <h5>{{ editingId ? "Edit Quiz" : "Add Quiz" }}</h5>
         </div>
+
         <div class="modal-body">
+        <label class="me-2">Select Course</label>
+          <select v-model="quizForm.course_id" class="form-control mb-2">
+            <option disabled value="">Select Course</option>
+            <option v-for="c in coursesList" :key="c.id" :value="c.id">{{ c.title }}</option>
+          </select>
+            <label class="me-2">Select Module</label>
+          <select v-model="quizForm.module_id" class="form-control mb-2">
+            <option disabled value="">Select Module</option>
+            <option v-for="m in filteredModules" :key="m.id" :value="m.id">{{ m.title }}</option>
+          </select>
 
-          <!-- Course -->
-          <div class="mb-3">
-            <label class="form-label">Course</label>
-            <select v-model="attachmentForm.course_id" class="form-select">
-              <option disabled value="">Select Course</option>
-              <option v-for="c in coursesList" :key="c.id" :value="c.id">{{ c.title }}</option>
-            </select>
-          </div>
+          <input v-model="quizForm.title" class="form-control mb-2" placeholder="Quiz Title" />
 
-          <!-- Module -->
-          <div class="mb-3">
-            <label class="form-label">Module</label>
-            <select v-model="attachmentForm.module_id" class="form-select">
-              <option disabled value="">Select Module</option>
-              <option v-for="m in filteredModules" :key="m.id" :value="m.id">{{ m.title }}</option>
-            </select>
-          </div>
+          <!-- QUESTIONS -->
+          <div v-for="(q, qIndex) in quizForm.questions" :key="qIndex" class="card p-3 mb-3">
+            <input v-model="q.question" class="form-control mb-2" placeholder="Question" />
 
-          <!-- Title -->
-          <div class="mb-3">
-            <label class="form-label">Attachment Title</label>
-            <input type="text" v-model="attachmentForm.title" class="form-control" />
-          </div>
-
-          <!-- Type -->
-             <div class="mb-3">
-            <label class="form-label">Attachment Type</label>
-            <select v-model="attachmentForm.attachment_type" class="form-select">
-              <option value="document">Document</option>
-              <option value="audio">Audio</option>
-              <option value="video">Video</option>
-              <option value="link">External Link</option>
-            </select>
-          </div>
-
-          <!-- File -->
-          <div v-if="attachmentForm.attachment_type !== 'link'" class="mb-3">
-            <label class="form-label">Upload File</label>
-            <input
-              type="file"
-              @change="onFileChange"
-              accept=".txt,.doc,.docx,.pdf,.csv,.xls,.xlsx"
-              class="form-control"
-            />
-            <div v-if="attachmentForm.file_preview" class="mt-2">
-              <span class="text-muted">Current: </span>
-              <a
-                v-if="attachmentForm.file_preview.startsWith('http')"
-                :href="attachmentForm.file_preview"
-                target="_blank"
-              >View File</a>
-              <span v-else>{{ attachmentForm.file_preview }}</span>
+            <div v-for="(opt, oIndex) in q.options" :key="oIndex" class="d-flex mb-2">
+              <input v-model="q.options[oIndex]" class="form-control me-2" />
+              <button @click="removeOption(qIndex, oIndex)" class="btn btn-sm btn-danger">X</button>
             </div>
+
+            <div class="d-flex mb-2 align-items-center">
+              <label class="me-2">Correct Answer:</label>
+              <input v-model="q.correct_answer" class="form-control w-50" placeholder="Type correct answer" />
+            </div>
+
+            <div class="d-flex mb-2 align-items-center">
+              <label class="me-2">Marks:</label>
+              <input type="number" min="1" v-model.number="q.score" class="form-control w-25" />
+            </div>
+
+            <button @click="addOption(qIndex)" class="btn btn-sm btn-secondary me-2">+ Option</button>
+            <button @click="removeQuestion(qIndex)" class="btn btn-sm btn-danger">Remove Question</button>
           </div>
 
-          <!-- Description -->
-          <div class="mb-3">
-            <label class="form-label">Description</label>
-            <textarea v-model="attachmentForm.description" class="form-control"></textarea>
-          </div>
+          <button @click="addQuestion" class="btn btn-secondary">+ Add Question</button>
 
         </div>
+
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary" :disabled="saving" @click="saveAttachment">
-            {{ saving ? "Saving..." : (editingId ? "Update Attachment" : "Save Attachment") }}
+          <button @click="saveQuiz" class="btn btn-success" :disabled="saving">
+            {{ saving ? "Saving..." : "Save Quiz" }}
           </button>
         </div>
+
       </div>
     </div>
   </div>
