@@ -18,6 +18,8 @@ export default {
       quizForm: {
         course_id: null,
         module_id: null,
+        viewingQuiz: null,
+        userAnswers: {},
         title: "",
         questions: [
           {
@@ -138,6 +140,11 @@ export default {
     .join("<br/>");
 },
 
+viewQuiz(record) {
+  this.viewingQuiz = record;
+  this.userAnswers = {};
+  new Modal(document.getElementById("viewQuizModal")).show();
+},
     removeQuestion(index) {
       this.quizForm.questions.splice(index, 1);
     },
@@ -212,7 +219,7 @@ export default {
 
     async deleteQuiz(record) {
       const result = await Swal.fire({
-        title: "Are you sure?",
+        title: "Are you sure you want to remove this quize?",
         icon: "warning",
         showCancelButton: true
       });
@@ -265,10 +272,22 @@ export default {
 
   <!-- Action -->
   <template v-else-if="column.key === 'action'">
-    <button @click="editQuiz(record)">Edit</button>
-    <button @click="deleteQuiz(record)">Delete</button>
+  <div class="edit-delete-action">
+  <a
+  href="javascript:void(0);"
+  class="me-2 p-2 mb-0"
+  @click="editQuiz(record)"
+  >
+  <vue-feather type="edit"></vue-feather>
+  </a>
+  <a class="me-2 p-2 mb-0" @click="deleteQuiz(record)">
+  <vue-feather type="trash-2"></vue-feather>
+  </a>
+  <a class="me-2 p-2 mb-0" @click="viewQuiz(record)">
+  <vue-feather type="eye"></vue-feather>
+  </a>
+  </div>
   </template>
-
   <!-- Default -->
   <template v-else>
     {{ record[column.dataIndex] }}
@@ -337,4 +356,40 @@ export default {
       </div>
     </div>
   </div>
+  <!-- VIEW QUIZ MODAL -->
+<div class="modal fade" id="viewQuizModal">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5>{{ viewingQuiz?.title }}</h5>
+      </div>
+
+      <div class="modal-body">
+        <div v-if="viewingQuiz">
+          <div v-for="(q, qIndex) in viewingQuiz.questions" :key="qIndex" class="mb-3">
+            <strong>{{ qIndex + 1 }}. {{ q.question }}</strong>
+
+            <div v-for="(opt, oIndex) in q.options" :key="oIndex">
+              <label>
+                <input
+                  type="radio"
+                  :name="'q_' + qIndex"
+                  :value="opt"
+                  v-model="userAnswers[qIndex]"
+                />
+                {{ opt }}
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+
+    </div>
+  </div>
+</div>
 </template>
