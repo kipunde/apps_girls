@@ -15,11 +15,13 @@ export default {
       modulesList: [],
       quizzes: [],
 
+      // ✅ FIXED (moved outside)
+      viewingQuiz: null,
+      userAnswers: {},
+
       quizForm: {
         course_id: null,
         module_id: null,
-        viewingQuiz: null,
-        userAnswers: {},
         title: "",
         questions: [
           {
@@ -85,6 +87,10 @@ export default {
         if (res.code === 200) {
           this.quizzes = res.quizzes.map(q => ({
             ...q,
+            // ✅ ensure questions is ARRAY
+            questions: typeof q.questions === "string"
+              ? JSON.parse(q.questions)
+              : q.questions,
             module_title: q.module_title || "-",
             course_title: q.course_title || "-"
           }));
@@ -113,15 +119,23 @@ export default {
         module_id: record.module_id,
         title: record.title,
         questions: record.questions.length
-          ? record.questions.map(q => ({
-              question: q.question,
-              options: q.options.length ? q.options : ["", "", "", ""],
-              correct_answer: q.correct_answer,
-              score: q.score
-            }))
+          ? record.questions
           : [{ question: "", options: ["", "", "", ""], correct_answer: "", score: 1 }]
       };
       new Modal(document.getElementById("quizModal")).show();
+    },
+
+    // ✅ FIXED VIEW
+    viewQuiz(record) {
+      this.viewingQuiz = {
+        ...record,
+        questions: typeof record.questions === "string"
+          ? JSON.parse(record.questions)
+          : record.questions
+      };
+
+      this.userAnswers = {};
+      new Modal(document.getElementById("viewQuizModal")).show();
     },
 
     addQuestion() {
@@ -133,18 +147,13 @@ export default {
       });
     },
 
-   formatQuestions(questions) {
-  if (!questions) return "";
-  return questions
-    .map((q, i) => `${i + 1}. ${q.question} ( Answer is ${q.correct_answer})`)
-    .join("<br/>");
-},
+    formatQuestions(questions) {
+      if (!questions) return "";
+      return questions
+        .map((q, i) => `${i + 1}. ${q.question} (Answer: ${q.correct_answer})`)
+        .join("<br/>");
+    },
 
-viewQuiz(record) {
-  this.viewingQuiz = record;
-  this.userAnswers = {};
-  new Modal(document.getElementById("viewQuizModal")).show();
-},
     removeQuestion(index) {
       this.quizForm.questions.splice(index, 1);
     },
@@ -157,25 +166,15 @@ viewQuiz(record) {
       this.quizForm.questions[qIndex].options.splice(oIndex, 1);
     },
 
-    // ---------------- SAVE / UPDATE ----------------
     async saveQuiz() {
-      // Basic form validation
       if (!this.quizForm.course_id || !this.quizForm.module_id || !this.quizForm.title.trim()) {
         Swal.fire("Validation", "Fill all required fields", "warning");
         return;
       }
 
-      // Question validation
       for (let q of this.quizForm.questions) {
-        const questionText = q.question?.trim();
-        const correctAnswer = q.correct_answer?.trim();
-        const optionsFilled = q.options.every(o => o.trim() !== "");
-        if (!questionText || !optionsFilled || !correctAnswer || q.score <= 0) {
-          Swal.fire(
-            "Validation",
-            "Complete all questions, options, assign marks, and define correct answer",
-            "warning"
-          );
+        if (!q.question.trim() || q.options.some(o => !o.trim()) || !q.correct_answer.trim()) {
+          Swal.fire("Validation", "Complete all questions properly", "warning");
           return;
         }
       }
@@ -183,34 +182,20 @@ viewQuiz(record) {
       this.saving = true;
       try {
         const payload = {
-          course_id: this.quizForm.course_id,
-          module_id: this.quizForm.module_id,
-          title: this.quizForm.title.trim(),
-          questions: this.quizForm.questions.map(q => ({
-            question: q.question.trim(),
-            options: q.options.map(o => o.trim()),
-            correct_answer: q.correct_answer.trim(),
-            score: Number(q.score)
-          }))
+          ...this.quizForm,
+          questions: this.quizForm.questions
         };
 
-        let response;
-        if (this.editingId) {
-          payload.id = this.editingId;
-          response = await apiService.updateQuiz(payload);
-        } else {
-          response = await apiService.saveQuiz(payload);
-        }
+        let response = this.editingId
+          ? await apiService.updateQuiz({ ...payload, id: this.editingId })
+          : await apiService.saveQuiz(payload);
 
         if (response.code === 200) {
           Swal.fire("Success", "Quiz saved!", "success");
           this.fetchQuizzes();
           Modal.getInstance(document.getElementById("quizModal"))?.hide();
-        } else {
-          Swal.fire("Error", response.message || "Failed to save quiz", "error");
         }
       } catch (err) {
-        console.error("API saveQuiz error:", err);
         Swal.fire("Error", "Failed to save quiz", "error");
       } finally {
         this.saving = false;
@@ -219,10 +204,11 @@ viewQuiz(record) {
 
     async deleteQuiz(record) {
       const result = await Swal.fire({
-        title: "Are you sure you want to remove this quize?",
+        title: "Are you sure you want to remove this quiz?",
         icon: "warning",
         showCancelButton: true
       });
+
       if (!result.isConfirmed) return;
 
       try {
@@ -231,7 +217,7 @@ viewQuiz(record) {
           Swal.fire("Deleted", "Quiz deleted", "success");
           this.fetchQuizzes();
         }
-      } catch (err) {
+      } catch {
         Swal.fire("Error", "Delete failed", "error");
       }
     }
@@ -244,7 +230,6 @@ viewQuiz(record) {
   }
 };
 </script>
-
 <template>
   <layout-header />
   <layout-sidebar />
@@ -258,7 +243,8 @@ viewQuiz(record) {
 
       <input v-model="filters.search" class="form-control mb-3" placeholder="Search..." />
 
-      <a-table :columns="columns" :data-source="filteredQuizzes" :loading="loading" rowKey="id">
+      <a-table :columns="columns" :data-source="filteredQuizzes" :loading="loading" rowKey="id"  :scroll="{ x: 'max-content' }"
+>
        <template #bodyCell="{ column, record }">
   <!-- Total Questions -->
   <template v-if="column.key === 'questions_count'">
@@ -357,16 +343,18 @@ viewQuiz(record) {
     </div>
   </div>
   <!-- VIEW QUIZ MODAL -->
+<!-- VIEW QUIZ MODAL -->
 <div class="modal fade" id="viewQuizModal">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
 
       <div class="modal-header">
-        <h5>{{ viewingQuiz?.title }}</h5>
+        <h5 v-if="viewingQuiz">{{ viewingQuiz.title }}</h5>
       </div>
 
       <div class="modal-body">
-        <div v-if="viewingQuiz">
+        <div v-if="viewingQuiz && viewingQuiz.questions && viewingQuiz.questions.length">
+
           <div v-for="(q, qIndex) in viewingQuiz.questions" :key="qIndex" class="mb-3">
             <strong>{{ qIndex + 1 }}. {{ q.question }}</strong>
 
@@ -382,6 +370,11 @@ viewQuiz(record) {
               </label>
             </div>
           </div>
+
+        </div>
+
+        <div v-else>
+          No questions found
         </div>
       </div>
 
