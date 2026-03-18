@@ -35,7 +35,6 @@ export default {
         { title: "Module", dataIndex: "module_name" },
         { title: "Title", dataIndex: "title" },
         { title: "Questions", dataIndex: "questions" },
-         { title: "Total Questions", key: "questions_count" },
         { title: "Created At", dataIndex: "created_at" },
         { title: "Action", key: "action" }
       ]
