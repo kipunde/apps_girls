@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../Models/Course.dart';
 import '../Models/CourseModule.dart';
 import '../Services/ApiService.dart';
+import 'QuizzesPage.dart'; // ✅ Import your quiz page
 
 class CourseDetailPage extends StatefulWidget {
   final Course course;
@@ -68,7 +69,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     }
   }
 
-  // 📦 Module Card (Clickable / Locked)
+  // 📦 Module Card (Clickable / Locked) with Quiz Button
   Widget moduleCard(String type, CourseModule module, String action) {
     final isSelected = selectedModule == module;
 
@@ -132,6 +133,32 @@ class _CourseDetailPageState extends State<CourseDetailPage>
               style: TextStyle(
                   color: module.isUnlocked ? Colors.white70 : Colors.white30),
             ),
+            const SizedBox(height: 12),
+            // ✅ Quiz Button
+            ElevatedButton.icon(
+              onPressed: module.isUnlocked
+                  ? () {
+                      // Navigate to Quiz Page
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => QuizzesPage(
+                            // moduleId: module.id,
+                            // moduleTitle: module.title,
+                          ),
+                        ),
+                      );
+                    }
+                  : null, // Disabled if locked
+              icon: const Icon(Icons.quiz),
+              label: const Text("Take Quiz"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.pink,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
           ],
         ),
       ),
@@ -143,7 +170,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     if (modules.isEmpty) {
       return const Center(
         child: Text(
-          "No Module Available",
+          "No Module Content Available",
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
       );
@@ -184,17 +211,13 @@ class _CourseDetailPageState extends State<CourseDetailPage>
               fontSize: 16,
             ),
           ),
-
           const SizedBox(height: 10),
-
           // ✅ Selected module title
           Text(
             selectedModule?.title ?? "",
             style: const TextStyle(fontSize: 18),
           ),
-
           const SizedBox(height: 20),
-
           // ✅ Grid
           GridView.builder(
             shrinkWrap: true,
