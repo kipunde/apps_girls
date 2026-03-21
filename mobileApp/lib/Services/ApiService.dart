@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../Models/Course.dart';
+import '../Models/CourseModule.dart';
 import 'AuthService.dart';
 import 'ServiceConstant.dart';
 
@@ -34,11 +35,9 @@ class ApiService {
       }
 
       final Map<String, dynamic> jsonData = jsonDecode(response.body);
-
       final List coursesData = jsonData['courses'] ?? [];
       print("Course list $coursesData");
 
-      // FIXED: Call fromJson with only one argument
       return coursesData.map((e) => Course.fromJson(e)).toList();
     } catch (e) {
       throw Exception("Error fetching courses: $e");
@@ -101,11 +100,44 @@ class ApiService {
 
       final List data = jsonResponse['courses'] ?? [];
 
-      // FIXED: Call fromJson with only one argument
       return data.map((json) => Course.fromJson(json)).toList();
     } catch (e) {
       print("Error fetching courses: $e");
       rethrow;
     }
   }
+
+ Future<List<CourseModule>> getCourseModules(int courseId, int userId) async {
+  print("Fetching modules for course id: $courseId, user id: $userId");
+
+  try {
+    final response = await http.post(
+      Uri.parse('${baseAPIPath}get_course_modules.php'),
+      body: {
+        'course_id': courseId.toString(),
+        'user_id': userId.toString(),
+      },
+    );
+
+    print("Status code: ${response.statusCode}");
+    print("API response: ${response.body}");
+
+    if (response.statusCode != 200) {
+      throw Exception("Failed to load modules: HTTP ${response.statusCode}");
+    }
+
+    final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+
+    if (jsonResponse['code'] != 200) {
+      throw Exception("API Error: ${jsonResponse['message']}");
+    }
+
+    final List data = jsonResponse['modules'] ?? [];
+    return data.map((json) => CourseModule.fromJson(json)).toList();
+  } catch (e) {
+    print("Error fetching modules: $e");
+    rethrow;
+  }
+}
+
 }

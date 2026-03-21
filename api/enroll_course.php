@@ -28,15 +28,15 @@ if (!$user_id || !$course_id) {
 }
 
 // Check duplicate enrollment
-$check = $conn->prepare("SELECT id, user_id, status FROM course_enrollments WHERE user_id = ? AND status IN ('enrolled','in_progress')");
-$check->bind_param("i", $user_id);
+$check = $conn->prepare("SELECT id, user_id, status FROM course_enrollments WHERE user_id = ? AND course_id = ? AND status IN ('enrolled','in_progress')");
+$check->bind_param("ii", $user_id, $course_id);
 $check->execute();
 $check->store_result();
 
 if ($check->num_rows > 0) {
     echo json_encode([
         "code" => 409,
-        "message" => "User already enrolled"
+        "message" => "User already enrolled in this course"
     ]);
     exit;
 }
@@ -47,10 +47,25 @@ $stmt = $conn->prepare("INSERT INTO course_enrollments (user_id, course_id, enro
 $stmt->bind_param("ii", $user_id, $course_id);
 
 if ($stmt->execute()) {
+
+    // ✅ Insert user_course_modules
+    $modules_stmt = $conn->prepare("INSERT INTO user_course_modules (user_id, course_id, module_number, unlocked_at) VALUES (?, ?, ?, ?)");
+    
+    if ($modules_stmt) {
+        $now = date("Y-m-d H:i:s");
+        for ($i = 1; $i <= 4; $i++) {
+            // Module 1 unlocked immediately, others locked (NULL)
+            $unlock_at = ($i == 1) ? $now : null;
+            $modules_stmt->bind_param("iiis", $user_id, $course_id, $i, $unlock_at);
+            $modules_stmt->execute();
+        }
+    }
+
     echo json_encode([
         "code" => 200,
-        "message" => "Course assigned to user"
+        "message" => "Course assigned and modules initialized"
     ]);
+
 } else {
     echo json_encode([
         "code" => 500,
