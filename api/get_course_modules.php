@@ -28,33 +28,37 @@ if (!$user_id || !$course_id) {
 }
 
 // Prepare query: get all modules for the user's enrolled course
-$query = "
-    SELECT 
-    m.id AS module_id,
-    c.title AS course_name,
-    m.title AS module_title,
-    m.short_detail,
-    m.document_path,
-    m.audio_link,
-    m.video_link,
-    me.status AS module_status,
-    me.assigned_at,
-    ce.created_at AS enrolled_at
-FROM course_enrollments AS ce
-INNER JOIN module_enrollments AS me 
-    ON me.user_id = ce.user_id 
-    AND me.module_id IN (
-        SELECT id FROM modules WHERE course_id = ce.course_id
-    )
-INNER JOIN modules AS m 
-    ON m.id = me.module_id
-INNER JOIN courses AS c 
-    ON c.id = m.course_id
-WHERE ce.user_id = ? 
-  AND ce.course_id = ? 
-  AND ce.status IN ('enrolled','in_progress')
-ORDER BY m.id ASC
-";
+$query = "SELECT 
+        m.id AS module_id,
+        c.title AS course_name,
+        m.title AS module_title,
+        m.short_detail,
+        m.document_path,
+        m.audio_link,
+        m.video_link,
+        me.status AS module_status,
+        me.assigned_at,
+        ce.created_at AS enrolled_at,
+        q.title as quize_name,
+        q.questions,
+        CASE WHEN q.id IS NOT NULL THEN 1 ELSE 0 END AS has_quiz
+    FROM course_enrollments AS ce
+    INNER JOIN module_enrollments AS me 
+        ON me.user_id = ce.user_id 
+        AND me.module_id IN (
+            SELECT id FROM modules WHERE course_id = ce.course_id
+        )
+    INNER JOIN modules AS m 
+        ON m.id = me.module_id
+    INNER JOIN courses AS c 
+        ON c.id = m.course_id
+    LEFT JOIN quizzes AS q 
+        ON q.module_id = m.id
+    WHERE ce.user_id = ? 
+      AND ce.course_id = ? 
+      AND ce.status IN ('enrolled','in_progress')
+    GROUP BY m.id
+    ORDER BY m.id ASC";
 
 $stmt = $conn->prepare($query);
 $stmt->bind_param("ii", $user_id, $course_id);
@@ -75,6 +79,9 @@ while ($row = $result->fetch_assoc()) {
         'module_status' => $row['module_status'] ?? 'disabled',
         'assigned_at' => $row['assigned_at'] ?? null,
         'enrolled_at' => $row['enrolled_at'] ?? null,
+        'quize_name' =>$row['quize_name']?? null,
+        'questions' =>$row['questions'] ?? null,
+
     ];
 }
 

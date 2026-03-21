@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../Models/Course.dart';
 import '../Models/CourseModule.dart';
 import '../Services/ApiService.dart';
-import 'QuizzesPage.dart'; // ✅ Import your quiz page
+import 'QuizzesPage.dart'; // ✅ Your quiz page
 
 class CourseDetailPage extends StatefulWidget {
   final Course course;
@@ -18,14 +18,12 @@ class _CourseDetailPageState extends State<CourseDetailPage>
   List<CourseModule> modules = [];
   bool isLoading = true;
   late TabController _tabController;
-
-  // ✅ Selected module
   CourseModule? selectedModule;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this); // 4 tabs
     fetchModules();
   }
 
@@ -41,11 +39,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
       setState(() {
         modules = response;
         isLoading = false;
-
-        // ✅ Default selected
-        if (modules.isNotEmpty) {
-          selectedModule = modules.first;
-        }
+        if (modules.isNotEmpty) selectedModule = modules.first;
       });
     } catch (e) {
       print("Error fetching modules: $e");
@@ -53,7 +47,6 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     }
   }
 
-  // 🎨 Colors
   Color getTypeColor(String type) {
     switch (type) {
       case 'PDF':
@@ -69,16 +62,29 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     }
   }
 
-  // 📦 Module Card (Clickable / Locked) with Quiz Button
-  Widget moduleCard(String type, CourseModule module, String action) {
+  // Module Card (clickable / navigates to quiz if isQuiz)
+  Widget moduleCard(String type, CourseModule module, String action,
+      {bool isQuiz = false}) {
     final isSelected = selectedModule == module;
 
     return GestureDetector(
       onTap: () {
-        if (module.isUnlocked) {
-          setState(() {
-            selectedModule = module; // ✅ update AppBar title
-          });
+        if (module.isUnlocked || isQuiz) {
+          setState(() => selectedModule = module);
+
+          if (isQuiz && module.hasQuiz) {
+            // Navigate to Quiz page
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => QuizzesPage(
+                  moduleId: module.id,
+                  moduleTitle: module.title,
+                  questions: List<Map<String, dynamic>>.from(module.questions ?? []),
+                ),
+              ),
+            );
+          }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Finish previous module first")),
@@ -111,7 +117,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                type,
+                isQuiz ? "QUIZ" : type,
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
@@ -123,49 +129,24 @@ class _CourseDetailPageState extends State<CourseDetailPage>
               module.title,
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: module.isUnlocked ? Colors.white : Colors.white38,
+                color: module.isUnlocked || isQuiz ? Colors.white : Colors.white38,
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 6),
-            Text(
-              action,
-              style: TextStyle(
-                  color: module.isUnlocked ? Colors.white70 : Colors.white30),
-            ),
-            const SizedBox(height: 12),
-            // ✅ Quiz Button
-            ElevatedButton.icon(
-              onPressed: module.isUnlocked
-                  ? () {
-                      // Navigate to Quiz Page
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => QuizzesPage(
-                            // moduleId: module.id,
-                            // moduleTitle: module.title,
-                          ),
-                        ),
-                      );
-                    }
-                  : null, // Disabled if locked
-              icon: const Icon(Icons.quiz),
-              label: const Text("Take Quiz"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.pink,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
+            if (!isQuiz)
+              Text(
+                action,
+                style: TextStyle(
+                  color: module.isUnlocked ? Colors.white70 : Colors.white30,
+                ),
               ),
-            ),
           ],
         ),
       ),
     );
   }
 
-  // 📊 Tab Content
   Widget buildTabContent(String type) {
     if (modules.isEmpty) {
       return const Center(
@@ -176,19 +157,24 @@ class _CourseDetailPageState extends State<CourseDetailPage>
       );
     }
 
-    // Filter by type
-    final filteredModules = modules.where((module) {
-      switch (type) {
-        case 'Document':
-          return module.documentPath != null && module.documentPath!.isNotEmpty;
-        case 'Audio':
-          return module.audioLink != null && module.audioLink!.isNotEmpty;
-        case 'Video':
-          return module.videoLink != null && module.videoLink!.isNotEmpty;
-        default:
-          return false;
-      }
-    }).toList();
+    List<CourseModule> filteredModules;
+
+    if (type == 'Quiz') {
+      filteredModules = modules.where((m) => m.hasQuiz).toList();
+    } else {
+      filteredModules = modules.where((module) {
+        switch (type) {
+          case 'Document':
+            return module.documentPath != null && module.documentPath!.isNotEmpty;
+          case 'Audio':
+            return module.audioLink != null && module.audioLink!.isNotEmpty;
+          case 'Video':
+            return module.videoLink != null && module.videoLink!.isNotEmpty;
+          default:
+            return false;
+        }
+      }).toList();
+    }
 
     if (filteredModules.isEmpty) {
       return Center(child: Text("No $type Available"));
@@ -201,24 +187,6 @@ class _CourseDetailPageState extends State<CourseDetailPage>
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // ✅ Dynamic MODULE number
-          Text(
-            selectedModule != null
-                ? "MODULE ${modules.indexOf(selectedModule!) + 1}"
-                : "MODULE",
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(height: 10),
-          // ✅ Selected module title
-          Text(
-            selectedModule?.title ?? "",
-            style: const TextStyle(fontSize: 18),
-          ),
-          const SizedBox(height: 20),
-          // ✅ Grid
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -244,7 +212,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                       ? 'MP3'
                       : 'MP4';
 
-              return moduleCard(moduleType, module, action);
+              return moduleCard(moduleType, module, action, isQuiz: type == 'Quiz');
             },
           ),
         ],
@@ -256,7 +224,6 @@ class _CourseDetailPageState extends State<CourseDetailPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // ✅ Dynamic AppBar title
         title: Text(
           selectedModule?.title ?? "Course",
           style: const TextStyle(color: Colors.white),
@@ -268,6 +235,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
             Tab(text: 'Document'),
             Tab(text: 'Audio'),
             Tab(text: 'Video'),
+            Tab(text: 'Quiz'),
           ],
         ),
         actions: [
@@ -288,6 +256,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                 buildTabContent('Document'),
                 buildTabContent('Audio'),
                 buildTabContent('Video'),
+                buildTabContent('Quiz'),
               ],
             ),
     );
