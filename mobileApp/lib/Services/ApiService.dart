@@ -120,7 +120,7 @@ class ApiService {
     );
 
     print("Status code: ${response.statusCode}");
-    print("API response: ${response.body}");
+    print("API response data: ${response.body}");
 
     if (response.statusCode != 200) {
       throw Exception("Failed to load modules: HTTP ${response.statusCode}");

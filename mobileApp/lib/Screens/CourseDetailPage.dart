@@ -68,15 +68,21 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     }
   }
 
-  // 📦 Module Card (Clickable)
+  // 📦 Module Card (Clickable / Locked)
   Widget moduleCard(String type, CourseModule module, String action) {
     final isSelected = selectedModule == module;
 
     return GestureDetector(
       onTap: () {
-        setState(() {
-          selectedModule = module; // ✅ update AppBar title
-        });
+        if (module.isUnlocked) {
+          setState(() {
+            selectedModule = module; // ✅ update AppBar title
+          });
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Finish previous module first")),
+          );
+        }
       },
       child: Container(
         decoration: BoxDecoration(
@@ -91,16 +97,14 @@ class _CourseDetailPageState extends State<CourseDetailPage>
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(15),
-          border:
-              isSelected ? Border.all(color: Colors.white, width: 2) : null,
+          border: isSelected ? Border.all(color: Colors.white, width: 2) : null,
         ),
         padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
@@ -117,15 +121,16 @@ class _CourseDetailPageState extends State<CourseDetailPage>
             Text(
               module.title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: module.isUnlocked ? Colors.white : Colors.white38,
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 6),
             Text(
               action,
-              style: const TextStyle(color: Colors.white70),
+              style: TextStyle(
+                  color: module.isUnlocked ? Colors.white70 : Colors.white30),
             ),
           ],
         ),
@@ -148,14 +153,11 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     final filteredModules = modules.where((module) {
       switch (type) {
         case 'Document':
-          return module.documentPath != null &&
-              module.documentPath!.isNotEmpty;
+          return module.documentPath != null && module.documentPath!.isNotEmpty;
         case 'Audio':
-          return module.audioLink != null &&
-              module.audioLink!.isNotEmpty;
+          return module.audioLink != null && module.audioLink!.isNotEmpty;
         case 'Video':
-          return module.videoLink != null &&
-              module.videoLink!.isNotEmpty;
+          return module.videoLink != null && module.videoLink!.isNotEmpty;
         default:
           return false;
       }
@@ -208,10 +210,10 @@ class _CourseDetailPageState extends State<CourseDetailPage>
               final module = filteredModules[index];
 
               String action = type == 'Video'
-              ? 'Watch'
-              : type == 'Audio'
-              ? 'Listen'
-              : 'View';
+                  ? 'Watch'
+                  : type == 'Audio'
+                      ? 'Listen'
+                      : 'View';
 
               String moduleType = type == 'Document'
                   ? 'PDF'
@@ -237,7 +239,6 @@ class _CourseDetailPageState extends State<CourseDetailPage>
           style: const TextStyle(color: Colors.white),
         ),
         backgroundColor: const Color(0xffe91e63),
-
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -246,7 +247,6 @@ class _CourseDetailPageState extends State<CourseDetailPage>
             Tab(text: 'Video'),
           ],
         ),
-
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),
@@ -257,7 +257,6 @@ class _CourseDetailPageState extends State<CourseDetailPage>
           ),
         ],
       ),
-
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : TabBarView(

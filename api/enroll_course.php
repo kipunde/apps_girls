@@ -28,15 +28,15 @@ if (!$user_id || !$course_id) {
 }
 
 // Check duplicate enrollment
-$check = $conn->prepare("SELECT id, user_id, status FROM course_enrollments WHERE user_id = ? AND course_id = ? AND status IN ('enrolled','in_progress')");
-$check->bind_param("ii", $user_id, $course_id);
+$check = $conn->prepare("SELECT id, user_id, status FROM course_enrollments WHERE user_id = ? AND status IN ('enrolled','in_progress')");
+$check->bind_param("i", $user_id);
 $check->execute();
 $check->store_result();
 
 if ($check->num_rows > 0) {
     echo json_encode([
         "code" => 409,
-        "message" => "User already enrolled in this course"
+        "message" => "User already enrolled"
     ]);
     exit;
 }
@@ -48,15 +48,20 @@ $stmt->bind_param("ii", $user_id, $course_id);
 
 if ($stmt->execute()) {
 
-    // ✅ Insert user_course_modules
-    $modules_stmt = $conn->prepare("INSERT INTO user_course_modules (user_id, course_id, module_number, unlocked_at) VALUES (?, ?, ?, ?)");
-    
-    if ($modules_stmt) {
-        $now = date("Y-m-d H:i:s");
-        for ($i = 1; $i <= 4; $i++) {
-            // Module 1 unlocked immediately, others locked (NULL)
-            $unlock_at = ($i == 1) ? $now : null;
-            $modules_stmt->bind_param("iiis", $user_id, $course_id, $i, $unlock_at);
+    // ✅ Fetch all modules attached to this course
+    $modules_result = $conn->query("SELECT id FROM modules WHERE course_id = $course_id ORDER BY id ASC");
+
+    if ($modules_result && $modules_result->num_rows > 0) {
+        $first = true; // Flag to enable only the first module
+        $modules_stmt = $conn->prepare("INSERT INTO module_enrollments (user_id, module_id, assigned_at, status) VALUES (?, ?, ?, ?)");
+
+        while ($row = $modules_result->fetch_assoc()) {
+            $module_id = $row['id'];
+            $now = date("Y-m-d H:i:s");
+            $status = $first ? 'enabled' : 'disabled';
+            $first = false;
+
+            $modules_stmt->bind_param("iiss", $user_id, $module_id, $now, $status);
             $modules_stmt->execute();
         }
     }
@@ -71,5 +76,4 @@ if ($stmt->execute()) {
         "code" => 500,
         "message" => "Failed to assign course"
     ]);
-}
-?>
+}?>
