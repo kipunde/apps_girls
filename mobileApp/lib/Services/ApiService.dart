@@ -140,4 +140,43 @@ class ApiService {
   }
 }
 
+
+//submit result 
+
+/// SUBMIT QUIZ RESULTS
+Future<bool> submitQuizResults({
+  required int moduleId,
+  required int userId,
+  required List<Map<String, dynamic>> answers,
+}) async {
+  print("Submitting quiz for module: $moduleId, user: $userId");
+
+  try {
+    final response = await http.post(
+      Uri.parse('${baseAPIPath}submit_quiz.php'),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "module_id": moduleId,
+        "user_id": userId,
+        "answers": answers,
+      }),
+    );
+
+    print("Status code: ${response.statusCode}");
+    print("API response: ${response.body}");
+
+    if (response.statusCode != 200) {
+      throw Exception("Failed to submit quiz (${response.statusCode})");
+    }
+
+    final data = jsonDecode(response.body);
+
+    return data['code'] == 200;
+  } catch (e) {
+    print("Submit quiz error: $e");
+    return false;
+  }
+}
 }

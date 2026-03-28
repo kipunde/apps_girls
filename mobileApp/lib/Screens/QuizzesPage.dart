@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import '../Services/ApiService.dart';
 
 class QuizzesPage extends StatefulWidget {
   final int moduleId;
   final String moduleTitle;
   final List<Map<String, dynamic>> questions;
+  final int userId; // Pass userId from login
 
   const QuizzesPage({
     super.key,
     required this.moduleId,
     required this.moduleTitle,
     required this.questions,
+    required this.userId,
   });
 
   @override
@@ -17,15 +20,63 @@ class QuizzesPage extends StatefulWidget {
 }
 
 class _QuizzesPageState extends State<QuizzesPage> {
-  // Stores user-selected answers: index = question index, value = selected option
-  Map<int, String> selectedAnswers = {};
+  final ApiService apiService = ApiService();
+  final Map<int, String> selectedAnswers = {};
+  bool isSubmitting = false;
+
+  // Submit quiz answers
+  Future<void> submitQuiz() async {
+    if (selectedAnswers.length != widget.questions.length) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please answer all questions")),
+      );
+      return;
+    }
+
+    setState(() => isSubmitting = true);
+
+    final submission = widget.questions.asMap().entries.map((e) {
+      final idx = e.key;
+      final question = e.value;
+      return {
+        'question_id': question['id'],
+        'selected_answer': selectedAnswers[idx]!,
+      };
+    }).toList();
+
+    try {
+      bool success = await apiService.submitQuizResults(
+        moduleId: widget.moduleId,
+        userId: widget.userId, // use userId passed from login
+        answers: submission,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            success ? "Quiz submitted successfully" : "Failed to submit quiz",
+          ),
+        ),
+      );
+
+      if (success) Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    } finally {
+      setState(() => isSubmitting = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.moduleTitle),
+        title: Text("Quiz for ${widget.moduleTitle}"),
         backgroundColor: const Color(0xffe91e63),
+        foregroundColor: Colors.white,
+        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -70,35 +121,14 @@ class _QuizzesPageState extends State<QuizzesPage> {
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xffe91e63),
           ),
-          child: const Text("Submit Answers"),
-          onPressed: () {
-            if (selectedAnswers.length != widget.questions.length) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Please answer all questions")),
-              );
-              return;
-            }
-
-            // Prepare submission payload
-            final submission = widget.questions.asMap().entries.map((e) {
-              final idx = e.key;
-              final question = e.value;
-              return {
-                'question': question['question'],
-                'selected_answer': selectedAnswers[idx],
-                'correct_answer': question['correct_answer'],
-                'score': question['score'],
-              };
-            }).toList();
-
-            // TODO: send 'submission' to your API
-            print("Submitted answers: $submission");
-
-            // Feedback
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Answers submitted!")),
-            );
-          },
+          onPressed: isSubmitting ? null : submitQuiz,
+          child: isSubmitting
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(color: Colors.white),
+                )
+              : const Text("Submit Answers"),
         ),
       ),
     );

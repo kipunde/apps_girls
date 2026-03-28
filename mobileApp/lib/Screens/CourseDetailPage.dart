@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../Models/Course.dart';
 import '../Models/CourseModule.dart';
 import '../Services/ApiService.dart';
-import 'QuizzesPage.dart'; // ✅ Your quiz page
+import 'QuizzesPage.dart';
 
 class CourseDetailPage extends StatefulWidget {
   final Course course;
@@ -20,10 +20,12 @@ class _CourseDetailPageState extends State<CourseDetailPage>
   late TabController _tabController;
   CourseModule? selectedModule;
 
+  int userId = 0; // store current user ID here
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this); // 4 tabs
+    _tabController = TabController(length: 4, vsync: this);
     fetchModules();
   }
 
@@ -31,10 +33,9 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     try {
       final apiService = ApiService();
       final user = await apiService.authService.getUserAccessDetails();
-      final userId = int.tryParse(user?.id ?? '0') ?? 0;
+      userId = int.tryParse(user?.id ?? '0') ?? 0;
 
-      final response =
-          await apiService.getCourseModules(widget.course.id, userId);
+      final response = await apiService.getCourseModules(widget.course.id, userId);
 
       setState(() {
         modules = response;
@@ -62,7 +63,6 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     }
   }
 
-  // Module Card (clickable / navigates to quiz if isQuiz)
   Widget moduleCard(String type, CourseModule module, String action,
       {bool isQuiz = false}) {
     final isSelected = selectedModule == module;
@@ -81,6 +81,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                   moduleId: module.id,
                   moduleTitle: module.title,
                   questions: List<Map<String, dynamic>>.from(module.questions ?? []),
+                  userId: userId, // ✅ pass userId
                 ),
               ),
             );
