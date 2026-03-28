@@ -26,6 +26,7 @@ class _QuizResultPageState extends State<QuizResultPage> {
   int totalScore = 0;
   int maxScore = 0;
   String status = "";
+  double percentage = 0;
 
   @override
   void initState() {
@@ -41,13 +42,12 @@ class _QuizResultPageState extends State<QuizResultPage> {
         quizId: widget.quizId,
       );
 
-      print("Result API: $data");
-
       setState(() {
         results = data['details'] ?? [];
         totalScore = data['total_score'] ?? 0;
         maxScore = data['max_score'] ?? 0;
         status = data['status'] ?? "FAIL";
+        percentage = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
         isLoading = false;
       });
     } catch (e) {
@@ -71,9 +71,11 @@ class _QuizResultPageState extends State<QuizResultPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("User ID: ${widget.userId}",
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
-
+                  /// HEADER INFO
+                  Text(
+                    "User ID: ${widget.userId}",
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   Text(
                     "Module: ${widget.moduleId} | Quiz: ${widget.quizId}",
                     style: const TextStyle(color: Colors.grey),
@@ -81,10 +83,16 @@ class _QuizResultPageState extends State<QuizResultPage> {
 
                   const SizedBox(height: 10),
 
+                  /// SCORE
                   Text(
                     "Score: $totalScore / $maxScore",
                     style: const TextStyle(
                         fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+
+                  Text(
+                    "Percentage: ${percentage.toStringAsFixed(1)}%",
+                    style: const TextStyle(fontSize: 14),
                   ),
 
                   Text(
@@ -96,7 +104,16 @@ class _QuizResultPageState extends State<QuizResultPage> {
                     ),
                   ),
 
-                  const Divider(),
+                  const SizedBox(height: 10),
+
+                  /// PROGRESS BAR
+                  LinearProgressIndicator(
+                    value: maxScore > 0 ? totalScore / maxScore : 0,
+                    backgroundColor: Colors.grey[300],
+                    color: status == "PASS" ? Colors.green : Colors.red,
+                  ),
+
+                  const Divider(height: 20, thickness: 2),
 
                   /// QUESTIONS LIST
                   Expanded(
@@ -104,28 +121,47 @@ class _QuizResultPageState extends State<QuizResultPage> {
                       itemCount: results.length,
                       itemBuilder: (context, index) {
                         final q = results[index];
+                        bool correct = q['is_correct'] == true;
 
                         return Card(
-                          color: q['is_correct']
+                          color: correct
                               ? Colors.green[50]
                               : Colors.red[50],
-                          margin: const EdgeInsets.symmetric(vertical: 5),
+                          margin: const EdgeInsets.symmetric(vertical: 6),
                           child: ListTile(
-                            title: Text(q['question'] ?? ''),
+                            /// QUESTION NUMBER BADGE
+                            leading: CircleAvatar(
+                              backgroundColor:
+                                  correct ? Colors.green : Colors.red,
+                              child: Text(
+                                "${q['question_id'] ?? index + 1}",
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            ),
+
+                            /// QUESTION TEXT
+                            title: Text(
+                              q['question'] ?? '',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+
+                            /// ANSWERS
                             subtitle: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text("Your: ${q['user_answer']}"),
-                                Text("Correct: ${q['correct_answer']}"),
+                                Text("Your: ${q['user_answer'] ?? '-'}"),
+                                Text("Correct: ${q['correct_answer'] ?? '-'}"),
                               ],
                             ),
+
+                            /// ICON
                             trailing: Icon(
-                              q['is_correct']
+                              correct
                                   ? Icons.check_circle
                                   : Icons.cancel,
-                              color: q['is_correct']
-                                  ? Colors.green
-                                  : Colors.red,
+                              color: correct ? Colors.green : Colors.red,
                             ),
                           ),
                         );
