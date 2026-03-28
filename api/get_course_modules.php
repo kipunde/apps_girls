@@ -41,6 +41,8 @@ $query = "SELECT
         ce.created_at AS enrolled_at,
         q.title as quize_name,
         q.questions,
+        q.id as quiz_id,
+
         CASE WHEN q.id IS NOT NULL THEN 1 ELSE 0 END AS has_quiz
     FROM course_enrollments AS ce
     INNER JOIN module_enrollments AS me 
@@ -69,7 +71,8 @@ $modules = [];
 
 while ($row = $result->fetch_assoc()) {
     $modules[] = [
-        'id' => (int)$row['module_id'],
+        'module_id' => (int)$row['module_id'],
+        'quiz_id'=> (int)$row['quiz_id'],
         'course_name' => $row['course_name'],
         'module_title' => $row['module_title'] ?? '',
         'short_detail' => $row['short_detail'] ?? '',

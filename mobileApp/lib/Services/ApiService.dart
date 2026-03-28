@@ -146,19 +146,21 @@ class ApiService {
 /// SUBMIT QUIZ RESULTS
 Future<bool> submitQuizResults({
   required int moduleId,
+  required int quizId,
   required int userId,
   required List<Map<String, dynamic>> answers,
 }) async {
-  print("Submitting quiz for module: $moduleId, user: $userId");
+  print("Submitting quiz for module: $moduleId, quiz id: $quizId, user: $userId, submitted anser: $answers ");
 
   try {
     final response = await http.post(
-      Uri.parse('${baseAPIPath}submit_quiz.php'),
+      Uri.parse('${baseAPIPath}quiz_answers_api.php'),
       headers: {
         "Content-Type": "application/json",
       },
       body: jsonEncode({
         "module_id": moduleId,
+        "quiz_id":quizId,
         "user_id": userId,
         "answers": answers,
       }),
@@ -179,4 +181,35 @@ Future<bool> submitQuizResults({
     return false;
   }
 }
+// user result 
+
+Future<Map<String, dynamic>> getQuizResult({
+  required int userId,
+  required int moduleId,
+  required int quizId,
+}) async {
+  final response = await http.post(
+    Uri.parse('${baseAPIPath}mark_quiz.php'),
+    headers: {"Content-Type": "application/json"},
+    body: jsonEncode({
+      "user_id": userId,
+      "module_id": moduleId,
+      "quiz_id": quizId,
+    }),
+  );
+
+  if (response.statusCode != 200) {
+    throw Exception("Failed to fetch quiz result (${response.statusCode})");
+  }
+
+  final data = jsonDecode(response.body);
+  print("result is $data");
+  if (data['code'] != 200) {
+    throw Exception("API error: ${data['message']}");
+  }
+
+  // ✅ FIX HERE
+  return data; 
+}
+
 }

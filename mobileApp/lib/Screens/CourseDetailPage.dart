@@ -78,7 +78,8 @@ class _CourseDetailPageState extends State<CourseDetailPage>
               context,
               MaterialPageRoute(
                 builder: (context) => QuizzesPage(
-                  moduleId: module.id,
+                  moduleId: module.moduleId,
+                  quizId:module.quizId,
                   moduleTitle: module.title,
                   questions: List<Map<String, dynamic>>.from(module.questions ?? []),
                   userId: userId, // ✅ pass userId

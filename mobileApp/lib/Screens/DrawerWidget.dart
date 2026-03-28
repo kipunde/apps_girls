@@ -9,6 +9,7 @@ import 'MyModulesPage.dart';
 import 'MaterialsPage.dart';
 import 'LiveClassPage.dart';
 import 'AboutPage.dart';
+import 'QuizResultPage.dart'; // make sure the path is correct
 
 class DrawerWidget extends StatefulWidget {
   const DrawerWidget({super.key});
@@ -111,6 +112,25 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                     context,
                     MaterialPageRoute(builder: (_) => MaterialsPage()),
                   ),
+                ),
+
+                drawerItem(
+                icon: Icons.bar_chart,
+                title: "My Quiz Results",
+                onTap: () {
+                // Example: navigate to a page showing quiz results
+                // You can pass userId here or fetch it inside QuizResultPage
+                Navigator.push(
+                context,
+                MaterialPageRoute(
+                builder: (_) => QuizResultPage(
+                userId: 20,      // replace with dynamic userId from authService
+                moduleId: 4,     // optional: you can allow the user to select module
+                quizId: 1,       // optional: you can allow user to select quiz
+                ),
+                ),
+                );
+                },
                 ),
 
                 const Divider(),

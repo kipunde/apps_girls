@@ -3,6 +3,7 @@ import '../Services/ApiService.dart';
 
 class QuizzesPage extends StatefulWidget {
   final int moduleId;
+  final int quizId;
   final String moduleTitle;
   final List<Map<String, dynamic>> questions;
   final int userId; // Pass userId from login
@@ -10,6 +11,7 @@ class QuizzesPage extends StatefulWidget {
   const QuizzesPage({
     super.key,
     required this.moduleId,
+    required this.quizId,
     required this.moduleTitle,
     required this.questions,
     required this.userId,
@@ -37,9 +39,8 @@ class _QuizzesPageState extends State<QuizzesPage> {
 
     final submission = widget.questions.asMap().entries.map((e) {
       final idx = e.key;
-      final question = e.value;
       return {
-        'question_id': question['id'],
+        'question_id': idx+1,
         'selected_answer': selectedAnswers[idx]!,
       };
     }).toList();
@@ -47,6 +48,7 @@ class _QuizzesPageState extends State<QuizzesPage> {
     try {
       bool success = await apiService.submitQuizResults(
         moduleId: widget.moduleId,
+        quizId:widget.quizId,
         userId: widget.userId, // use userId passed from login
         answers: submission,
       );

@@ -2,6 +2,8 @@ import 'dart:convert';
 
 class CourseModule {
   final int id;
+  final moduleId;
+  final quizId;
   final String courseName;
   final String title;
   final String shortDetail;
@@ -16,6 +18,8 @@ class CourseModule {
 
   CourseModule({
     required this.id,
+    required this.quizId,
+    required this.moduleId,
     required this.courseName,
     required this.title,
     required this.shortDetail,
@@ -45,7 +49,9 @@ class CourseModule {
     }
 
     return CourseModule(
-     id: json['module_id'] ?? json['id'] ?? 0,
+      id: json['module_id'] ?? json['id'] ?? 0,
+      moduleId: json['module_id'] ??  0,
+      quizId: json['quiz_id'] ?? 0,
       courseName: json['course_name'] ?? '',
       title: json['module_title'] ?? '',
       shortDetail: json['short_detail'] ?? '',
