@@ -595,5 +595,46 @@ async deleteQuiz(quizId) {
   }
 },
 
+// ✅ GET ALL QUIZ RESULTS
+async getAllQuizResults() {
+  try {
+    const response = await fetch(`${this.baseUrl}/get_all_quiz_results.php`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include", // keep session if needed
+    });
+
+    // Check HTTP status
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    console.log("Quiz Results API Response:", data);
+
+    // Validate backend response
+    if (data.code !== 200) {
+      throw new Error(data.message || "Failed to fetch quiz results");
+    }
+
+    // Ensure safe return structure
+    return {
+      code: 200,
+      results: data.results || [],
+    };
+
+  } catch (error) {
+    console.error("API getAllQuizResults error:", error.message);
+
+    return {
+      code: 500,
+      results: [],
+      message: error.message,
+    };
+  }
+},
 
 };
