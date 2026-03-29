@@ -184,17 +184,13 @@ Future<bool> submitQuizResults({
 // user result 
 
 Future<Map<String, dynamic>> getQuizResult({
-  required int userId,
-  required int moduleId,
-  required int quizId,
+  required int userId
 }) async {
   final response = await http.post(
     Uri.parse('${baseAPIPath}mark_quiz.php'),
     headers: {"Content-Type": "application/json"},
     body: jsonEncode({
-      "user_id": userId,
-      "module_id": moduleId,
-      "quiz_id": quizId,
+      "user_id": userId
     }),
   );
 

@@ -4,14 +4,10 @@ import 'DrawerWidget.dart';
 
 class QuizResultPage extends StatefulWidget {
   final int userId;
-  final int moduleId;
-  final int quizId;
 
   const QuizResultPage({
     super.key,
     required this.userId,
-    required this.moduleId,
-    required this.quizId,
   });
 
   @override
@@ -38,8 +34,6 @@ class _QuizResultPageState extends State<QuizResultPage> {
     try {
       final data = await apiService.getQuizResult(
         userId: widget.userId,
-        moduleId: widget.moduleId,
-        quizId: widget.quizId,
       );
 
       setState(() {
@@ -73,14 +67,9 @@ class _QuizResultPageState extends State<QuizResultPage> {
                 children: [
                   /// HEADER INFO
                   Text(
-                    "User ID: ${widget.userId}",
+                    "Quiz Results",
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  Text(
-                    "Module: ${widget.moduleId} | Quiz: ${widget.quizId}",
-                    style: const TextStyle(color: Colors.grey),
-                  ),
-
                   const SizedBox(height: 10),
 
                   /// SCORE
@@ -96,7 +85,7 @@ class _QuizResultPageState extends State<QuizResultPage> {
                   ),
 
                   Text(
-                    "Result: $status ${status == "PASS" ? "✅" : "❌"}",
+                    "Result: $status ${status == "PASS" ? "✅" : ""}",
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
