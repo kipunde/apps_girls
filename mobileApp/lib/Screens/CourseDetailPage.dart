@@ -179,8 +179,11 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     }
 
     if (filteredModules.isEmpty) {
-      return Center(child: Text("No $type Available"));
-    }
+  print('Filtered modules for $type: $filteredModules'); 
+  return Center(
+    child: Text("No $type Available"),
+  );
+}
 
     int crossAxis = filteredModules.length == 1 ? 1 : 2;
 

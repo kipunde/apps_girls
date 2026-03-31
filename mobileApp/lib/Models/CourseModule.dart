@@ -34,38 +34,42 @@ class CourseModule {
   });
 
   factory CourseModule.fromJson(Map<String, dynamic> json) {
-    List<Map<String, dynamic>>? parsedQuestions;
+  List<Map<String, dynamic>>? parsedQuestions;
 
-    // Parse questions if available
-    if (json['questions'] != null) {
-      try {
-        parsedQuestions = List<Map<String, dynamic>>.from(
-          (jsonDecode(json['questions']) as List<dynamic>)
-              .map((e) => Map<String, dynamic>.from(e)),
-        );
-      } catch (e) {
-        parsedQuestions = null; // fallback if JSON parsing fails
-      }
+  // Parse questions if available
+  if (json['questions'] != null) {
+    try {
+      parsedQuestions = List<Map<String, dynamic>>.from(
+        (jsonDecode(json['questions']) as List<dynamic>)
+            .map((e) => Map<String, dynamic>.from(e)),
+      );
+    } catch (e) {
+      parsedQuestions = null; // fallback if JSON parsing fails
+      print("Error parsing questions: $e");
     }
-
-    return CourseModule(
-      id: json['module_id'] ?? json['id'] ?? 0,
-      moduleId: json['module_id'] ??  0,
-      quizId: json['quiz_id'] ?? 0,
-      courseName: json['course_name'] ?? '',
-      title: json['module_title'] ?? '',
-      shortDetail: json['short_detail'] ?? '',
-      documentPath: json['document_path'],
-      audioLink: json['audio_link'],
-      videoLink: json['video_link'],
-      moduleStatus: json['module_status'] ?? 'disabled',
-      assignedAt: json['assigned_at'] ?? '',
-      hasQuiz: json['quize_name'] != null,
-      quizName: json['quize_name'],
-      questions: parsedQuestions,
-    );
   }
 
+  int parsedQuizId = json['quiz_id'] != null
+      ? int.tryParse(json['quiz_id'].toString()) ?? 0
+      : 0;
+
+  return CourseModule(
+    id: json['module_id'] ?? json['id'] ?? 0,
+    moduleId: json['module_id'] ?? 0,
+    quizId: parsedQuizId,
+    courseName: json['course_name'] ?? '',
+    title: json['module_title'] ?? '',
+    shortDetail: json['short_detail'] ?? '',
+    documentPath: json['document_path'],
+    audioLink: json['audio_link'],
+    videoLink: json['video_link'],
+    moduleStatus: json['module_status'] ?? 'disabled',
+    assignedAt: json['assigned_at'] ?? '',
+    hasQuiz: parsedQuizId > 0,          // ✅ compute from quiz_id
+    quizName: json['quize_name'],
+    questions: parsedQuestions,
+  );
+}
   // Convenience getter
   bool get isUnlocked => moduleStatus == 'enabled';
 }
