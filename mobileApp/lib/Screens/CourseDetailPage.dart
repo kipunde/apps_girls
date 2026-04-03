@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
+import 'package:video_player/video_player.dart';
+import 'package:audioplayers/audioplayers.dart';
+
 import '../Models/Course.dart';
 import '../Models/CourseModule.dart';
 import '../Services/ApiService.dart';
+
 import 'QuizzesPage.dart';
+import 'AllContentPage.dart';
 
 class CourseDetailPage extends StatefulWidget {
   final Course course;
@@ -19,8 +25,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
   bool isLoading = true;
   late TabController _tabController;
   CourseModule? selectedModule;
-
-  int userId = 0; // store current user ID here
+  int userId = 0;
 
   @override
   void initState() {
@@ -35,7 +40,8 @@ class _CourseDetailPageState extends State<CourseDetailPage>
       final user = await apiService.authService.getUserAccessDetails();
       userId = int.tryParse(user?.id ?? '0') ?? 0;
 
-      final response = await apiService.getCourseModules(widget.course.id, userId);
+      final response =
+          await apiService.getCourseModules(widget.course.id, userId);
 
       setState(() {
         modules = response;
@@ -43,7 +49,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
         if (modules.isNotEmpty) selectedModule = modules.first;
       });
     } catch (e) {
-      print("Error fetching modules: $e");
+      debugPrint("Error fetching modules: $e");
       setState(() => isLoading = false);
     }
   }
@@ -51,10 +57,13 @@ class _CourseDetailPageState extends State<CourseDetailPage>
   Color getTypeColor(String type) {
     switch (type) {
       case 'PDF':
+      case 'Document':
         return Colors.blue;
       case 'MP3':
+      case 'Audio':
         return Colors.green;
       case 'MP4':
+      case 'Video':
         return Colors.pink;
       case 'PPT':
         return Colors.orange;
@@ -63,47 +72,81 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     }
   }
 
-  Widget moduleCard(String type, CourseModule module, String action,
-      {bool isQuiz = false}) {
+  void openModule(CourseModule module, String type) {
+    if (!module.isUnlocked && type != 'Quiz') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Finish previous module first")),
+      );
+      return;
+    }
+
+    switch (type) {
+      case 'Quiz':
+        if (module.hasQuiz) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => QuizzesPage(
+                moduleId: module.moduleId,
+                quizId: module.quizId,
+                moduleTitle: module.title,
+                questions: List<Map<String, dynamic>>.from(module.questions ?? []),
+                userId: userId,
+              ),
+            ),
+          );
+        }
+        break;
+
+      case 'Document':
+        if (module.documentPath?.isNotEmpty ?? false) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => DocumentViewerPage(url: module.documentPath!),
+            ),
+          );
+        }
+        break;
+
+      case 'Audio':
+        if (module.audioLink?.isNotEmpty ?? false) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => AudioPlayerPage(url: module.audioLink!),
+            ),
+          );
+        }
+        break;
+
+      case 'Video':
+        if (module.videoLink?.isNotEmpty ?? false) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => VideoPlayerPage(url: module.videoLink!),
+            ),
+          );
+        }
+        break;
+    }
+  }
+
+  Widget moduleCard(String type, CourseModule module) {
     final isSelected = selectedModule == module;
 
     return GestureDetector(
       onTap: () {
-        if (module.isUnlocked || isQuiz) {
-          setState(() => selectedModule = module);
-
-          if (isQuiz && module.hasQuiz) {
-            // Navigate to Quiz page
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => QuizzesPage(
-                  moduleId: module.moduleId,
-                  quizId:module.quizId,
-                  moduleTitle: module.title,
-                  questions: List<Map<String, dynamic>>.from(module.questions ?? []),
-                  userId: userId, // ✅ pass userId
-                ),
-              ),
-            );
-          }
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Finish previous module first")),
-          );
-        }
+        setState(() => selectedModule = module);
+        openModule(module, type);
       },
       child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: isSelected
                 ? [Colors.pinkAccent, Colors.pink]
-                : [
-                    getTypeColor(type).withOpacity(0.8),
-                    getTypeColor(type),
-                  ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+                : [getTypeColor(type).withOpacity(0.8), getTypeColor(type)],
           ),
           borderRadius: BorderRadius.circular(15),
           border: isSelected ? Border.all(color: Colors.white, width: 2) : null,
@@ -119,11 +162,8 @@ class _CourseDetailPageState extends State<CourseDetailPage>
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                isQuiz ? "QUIZ" : type,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
+                type,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
             ),
             const SizedBox(height: 15),
@@ -131,18 +171,10 @@ class _CourseDetailPageState extends State<CourseDetailPage>
               module.title,
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: module.isUnlocked || isQuiz ? Colors.white : Colors.white38,
+                color: module.isUnlocked ? Colors.white : Colors.white38,
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 6),
-            if (!isQuiz)
-              Text(
-                action,
-                style: TextStyle(
-                  color: module.isUnlocked ? Colors.white70 : Colors.white30,
-                ),
-              ),
           ],
         ),
       ),
@@ -150,28 +182,19 @@ class _CourseDetailPageState extends State<CourseDetailPage>
   }
 
   Widget buildTabContent(String type) {
-    if (modules.isEmpty) {
-      return const Center(
-        child: Text(
-          "No Module Content Available",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-      );
-    }
-
     List<CourseModule> filteredModules;
 
     if (type == 'Quiz') {
       filteredModules = modules.where((m) => m.hasQuiz).toList();
     } else {
-      filteredModules = modules.where((module) {
+      filteredModules = modules.where((m) {
         switch (type) {
           case 'Document':
-            return module.documentPath != null && module.documentPath!.isNotEmpty;
+            return m.documentPath?.isNotEmpty ?? false;
           case 'Audio':
-            return module.audioLink != null && module.audioLink!.isNotEmpty;
+            return m.audioLink?.isNotEmpty ?? false;
           case 'Video':
-            return module.videoLink != null && module.videoLink!.isNotEmpty;
+            return m.videoLink?.isNotEmpty ?? false;
           default:
             return false;
         }
@@ -179,48 +202,22 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     }
 
     if (filteredModules.isEmpty) {
-  print('Filtered modules for $type: $filteredModules'); 
-  return Center(
-    child: Text("No $type Available"),
-  );
-}
-
-    int crossAxis = filteredModules.length == 1 ? 1 : 2;
+      return Center(child: Text("No $type Available"));
+    }
 
     return RefreshIndicator(
       onRefresh: fetchModules,
-      child: ListView(
+      child: GridView.builder(
         padding: const EdgeInsets.all(16),
-        children: [
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: filteredModules.length,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxis,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 0.9,
-            ),
-            itemBuilder: (context, index) {
-              final module = filteredModules[index];
-
-              String action = type == 'Video'
-                  ? 'Watch'
-                  : type == 'Audio'
-                      ? 'Listen'
-                      : 'View';
-
-              String moduleType = type == 'Document'
-                  ? 'PDF'
-                  : type == 'Audio'
-                      ? 'MP3'
-                      : 'MP4';
-
-              return moduleCard(moduleType, module, action, isQuiz: type == 'Quiz');
-            },
-          ),
-        ],
+        itemCount: filteredModules.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+        ),
+        itemBuilder: (_, index) {
+          return moduleCard(type, filteredModules[index]);
+        },
       ),
     );
   }
@@ -229,10 +226,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          selectedModule?.title ?? "Course",
-          style: const TextStyle(color: Colors.white),
-        ),
+        title: Text(selectedModule?.title ?? "Course"),
         backgroundColor: const Color(0xffe91e63),
         bottom: TabBar(
           controller: _tabController,
@@ -244,6 +238,17 @@ class _CourseDetailPageState extends State<CourseDetailPage>
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.list, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => AllContentPage(modules: modules, userId: userId),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: () {
@@ -265,5 +270,146 @@ class _CourseDetailPageState extends State<CourseDetailPage>
               ],
             ),
     );
+  }
+}
+
+// --------------------- AUDIO PLAYER ---------------------
+class AudioPlayerPage extends StatefulWidget {
+  final String url;
+  const AudioPlayerPage({super.key, required this.url});
+
+  @override
+  State<AudioPlayerPage> createState() => _AudioPlayerPageState();
+}
+
+class _AudioPlayerPageState extends State<AudioPlayerPage> {
+  final AudioPlayer player = AudioPlayer();
+  bool isPlaying = false;
+
+  @override
+  void initState() {
+    super.initState();
+    player.setSourceUrl(widget.url);
+  }
+
+  @override
+  void dispose() {
+    player.dispose();
+    super.dispose();
+  }
+
+  void togglePlay() async {
+    if (isPlaying) {
+      await player.pause();
+    } else {
+      await player.resume();
+    }
+    setState(() => isPlaying = !isPlaying);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Audio Player"), backgroundColor: const Color(0xffe91e63)),
+      body: Center(
+        child: IconButton(
+          iconSize: 80,
+          icon: Icon(isPlaying ? Icons.pause_circle : Icons.play_circle, color: Colors.pink),
+          onPressed: togglePlay,
+        ),
+      ),
+    );
+  }
+}
+
+// --------------------- VIDEO PLAYER ---------------------
+class VideoPlayerPage extends StatefulWidget {
+  final String url;
+  const VideoPlayerPage({super.key, required this.url});
+
+  @override
+  State<VideoPlayerPage> createState() => _VideoPlayerPageState();
+}
+
+class _VideoPlayerPageState extends State<VideoPlayerPage> {
+  late VideoPlayerController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = VideoPlayerController.network(widget.url)
+      ..initialize().then((_) => setState(() {}))
+      ..play();
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  void togglePlay() {
+    if (controller.value.isPlaying) {
+      controller.pause();
+    } else {
+      controller.play();
+    }
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Video Player"), backgroundColor: const Color(0xffe91e63)),
+      body: controller.value.isInitialized
+          ? Column(
+              children: [
+                AspectRatio(
+                  aspectRatio: controller.value.aspectRatio,
+                  child: VideoPlayer(controller),
+                ),
+                IconButton(
+                  iconSize: 70,
+                  icon: Icon(
+                    controller.value.isPlaying ? Icons.pause_circle : Icons.play_circle,
+                    color: Colors.pink,
+                  ),
+                  onPressed: togglePlay,
+                ),
+              ],
+            )
+          : const Center(child: CircularProgressIndicator()),
+    );
+  }
+}
+
+// --------------------- DOCUMENT VIEWER ---------------------
+class DocumentViewerPage extends StatelessWidget {
+  final String url;
+  const DocumentViewerPage({super.key, required this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    // For PDF, show PDF viewer; for others, open link externally
+    if (url.endsWith(".pdf")) {
+      return Scaffold(
+        appBar: AppBar(title: const Text("PDF Viewer"), backgroundColor: const Color(0xffe91e63)),
+        body: SfPdfViewer.network(url),
+      );
+    } else {
+      return Scaffold(
+        appBar: AppBar(title: const Text("Document Viewer"), backgroundColor: const Color(0xffe91e63)),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              "Cannot preview this document type.\nPlease open it in another app.",
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 18),
+            ),
+          ),
+        ),
+      );
+    }
   }
 }

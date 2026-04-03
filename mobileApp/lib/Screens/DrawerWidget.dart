@@ -220,7 +220,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
           const Padding(
             padding: EdgeInsets.all(12),
             child: Text(
-              "WomenBiz 360 v1.0",
+              "WomenBiz 360 v1.0.2",
               style: TextStyle(color: Colors.grey),
             ),
           ),
