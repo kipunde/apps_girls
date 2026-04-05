@@ -86,6 +86,32 @@ export default {
       }
     },
 
+     printResult() {
+    const printContent = document.querySelector('#quizResultModal .modal-body');
+    const WinPrint = window.open('', '', 'width=900,height=650');
+    WinPrint.document.write(`
+      <html>
+        <head>
+          <title>Quiz Result</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            .card { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+            .bg-light-success { background-color: #e6f9ec; }
+            .bg-light-danger { background-color: #fdecea; }
+            .bg-light-warning { background-color: #fff4e5; }
+          </style>
+        </head>
+        <body>
+          ${printContent.innerHTML}
+        </body>
+      </html>
+    `);
+    WinPrint.document.close();
+    WinPrint.focus();
+    WinPrint.print();
+    WinPrint.close();
+  },
+
     closeModal() {
       this.quizModal?.hide();
       this.selectedResult = null;
@@ -185,9 +211,9 @@ export default {
             <p><strong>Correct Answer:</strong> {{ q.correct_answer }}</p>
           </div>
         </div>
-
         <div class="modal-footer">
-          <button class="btn btn-secondary" @click="closeModal">Close</button>
+        <button class="btn btn-primary" @click="printResult">Print</button>
+        <button class="btn btn-secondary" @click="closeModal">Close</button>
         </div>
       </div>
     </div>
