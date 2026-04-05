@@ -22,7 +22,7 @@ export default {
       saving: false,
       editingModuleId: null,
       columns: [
-        { title: "ID", dataIndex: "course_id", key: "course_id" },
+        { title: "ID", dataIndex: "id", key: "id" },
         { title: "Title", dataIndex: "title", key: "title" },
         { title: "Course", dataIndex: "course_title", key: "course_title" },
         { title: "Short Detail", dataIndex: "short_detail", key: "short_detail" },

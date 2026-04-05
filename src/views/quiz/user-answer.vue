@@ -14,22 +14,27 @@ export default {
         { title: "Course", dataIndex: "course_title", key: "course_title" },
         { title: "Module", dataIndex: "module_title", key: "module_title" },
         { title: "Quiz", dataIndex: "quiz_title", key: "quiz_title" },
-        { title: "Score", dataIndex: "score", key: "score" },
-        { title: "Status", dataIndex: "status", key: "status" },
+
+        // ✅ FIXED SCORE MARKS
+        { title: "Score Marks", key: "score_marks" },
+
+        { title: "Score (%)", dataIndex: "percentage", key: "percentage" },
+        { title: "Status", key: "status" },
         { title: "Action", key: "action" }
       ]
     };
   },
 
   methods: {
-    // ✅ Fetch all quiz submissions
+    // ✅ Fetch results
     async fetchResults() {
       this.loading = true;
       try {
         const res = await apiService.getAllQuizResults();
+        console.log("Results:", res);
 
         if (res.code === 200) {
-          this.results = res.results;
+          this.results = res.results || [];
         }
       } catch (err) {
         console.error("Error fetching results:", err);
@@ -38,7 +43,7 @@ export default {
       }
     },
 
-    // ✅ View detailed result (calls marking API)
+    // ✅ View detailed result
     async viewResult(record) {
       try {
         const res = await apiService.getQuizResult({
@@ -49,10 +54,10 @@ export default {
 
         this.selectedResult = {
           ...record,
-          details: res.details,
-          total_score: res.total_score,
-          max_score: res.max_score,
-          status: res.status
+          details: res.details || [],
+          total_score: res.total_score ?? record.total_score,
+          max_score: res.max_score ?? record.max_score,
+          status: res.status || record.status
         };
 
         this.showModal = true;
@@ -69,17 +74,15 @@ export default {
 </script>
 
 <template>
-  <layout-header></layout-header>
-  <layout-sidebar></layout-sidebar>
+  <layout-header />
+  <layout-sidebar />
 
   <div class="page-wrapper">
     <div class="content">
 
       <!-- HEADER -->
       <div class="page-header mb-3">
-        <div class="page-title">
-          <h4>Users Quiz Results</h4>
-        </div>
+        <h4>Users Quiz Results</h4>
       </div>
 
       <!-- TABLE -->
@@ -95,23 +98,35 @@ export default {
 
             <template #bodyCell="{ column, record }">
 
+              <!-- SCORE MARKS -->
+              <template v-if="column.key === 'score_marks'">
+                {{ record.total_score }} / {{ record.max_score }}
+              </template>
+
               <!-- STATUS -->
-              <template v-if="column.key === 'status'">
-                <span :class="record.status === 'PASS' ? 'text-success' : 'text-danger'">
+              <template v-else-if="column.key === 'status'">
+                <span
+                  :class="record.status === 'PASS'
+                    ? 'text-success fw-bold'
+                    : 'text-danger fw-bold'"
+                >
                   {{ record.status }}
                 </span>
               </template>
 
               <!-- ACTION -->
               <template v-else-if="column.key === 'action'">
-                <button class="btn btn-sm btn-primary" @click="viewResult(record)">
+                <button
+                  class="btn btn-sm btn-primary"
+                  @click="viewResult(record)"
+                >
                   View
                 </button>
               </template>
 
               <!-- DEFAULT -->
               <template v-else>
-                <span>{{ record[column.dataIndex] }}</span>
+                {{ record[column.dataIndex] }}
               </template>
 
             </template>
@@ -133,7 +148,7 @@ export default {
 
         <!-- HEADER -->
         <div class="modal-header">
-          <h5 class="modal-title">Quiz Result</h5>
+          <h5 class="modal-title">Quiz Result Details</h5>
           <button class="btn-close" @click="showModal = false"></button>
         </div>
 
@@ -149,32 +164,52 @@ export default {
 
           <p>
             <strong>Score:</strong>
-            {{ selectedResult.total_score }} / {{ selectedResult.max_score }}
+            {{ selectedResult.total_score }} /
+            {{ selectedResult.max_score }}
           </p>
 
           <p>
             <strong>Status:</strong>
-            <span :class="selectedResult.status === 'PASS' ? 'text-success' : 'text-danger'">
+            <span
+              :class="selectedResult.status === 'PASS'
+                ? 'text-success'
+                : 'text-danger'"
+            >
               {{ selectedResult.status }}
             </span>
           </p>
 
           <hr>
 
-          <!-- QUESTIONS -->
+          <!-- QUESTIONS + ANSWERS -->
           <div
             v-for="(q, index) in selectedResult.details"
             :key="index"
-            class="card mb-2 p-2"
-            :class="q.is_correct ? 'bg-light-success' : 'bg-light-danger'"
+            class="card mb-2 p-3"
+            :class="q.is_correct
+              ? 'bg-light-success'
+              : 'bg-light-danger'"
           >
             <strong>Question {{ index + 1 }}</strong>
 
-            <p>{{ q.question }}</p>
+            <p class="mt-2">{{ q.question }}</p>
 
-            <p><strong>Your:</strong> {{ q.user_answer }}</p>
-            <p><strong>Correct:</strong> {{ q.correct_answer }}</p>
+            <p>
+              <strong>Your Answer:</strong>
+              {{ q.user_answer || 'No Answer' }}
+            </p>
 
+            <p>
+              <strong>Correct Answer:</strong>
+              {{ q.correct_answer }}
+            </p>
+
+            <p>
+              <strong>Result:</strong>
+              <span :class="q.is_correct ? 'text-success' : 'text-danger'">
+                {{ q.is_correct ? 'Correct' : 'Wrong' }}
+              </span>
+            </p>
           </div>
 
         </div>

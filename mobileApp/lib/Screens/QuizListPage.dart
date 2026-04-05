@@ -10,6 +10,7 @@ class QuizListPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      print("Total quizzes received: ${quizzes.length}");
     return Scaffold(
       appBar: AppBar(
         title: const Text("Quizzes"),

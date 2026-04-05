@@ -78,7 +78,41 @@ try {
             );
             break;
 
-        // ------------------- GET QUIZ -------------------
+        // ------------------- GET ALL QUIZES-------------------
+            case 'getQuizList':
+            $module_id= isset($_GET['module_id']) ? intval($_GET['module_id']) : null;
+
+            if ($module_id) {
+                $stmt = $conn->prepare("
+                    SELECT q.*, c.title AS course_name, m.title AS module_name
+                    FROM quizzes q
+                    LEFT JOIN courses c ON q.course_id = c.id
+                    LEFT JOIN modules m ON q.module_id = m.id
+                    WHERE q.module_id = ?
+                ");
+                $stmt->bind_param("i", $module_id);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $quiz = $result->fetch_assoc();
+                echo json_encode($quiz ? ["code" => 200, "data" => $quiz] : ["code" => 404, "message" => "Quiz not found"]);
+            } else {
+                $result = $conn->query("
+                    SELECT q.*, c.title AS course_name, m.title AS module_name
+                    FROM quizzes q
+                    LEFT JOIN courses c ON q.course_id = c.id
+                    LEFT JOIN modules m ON q.module_id = m.id
+                    ORDER BY q.created_at DESC
+                ");
+                $quizzes = [];
+                while ($row = $result->fetch_assoc()) {
+                    $quizzes[] = $row;
+                }
+                echo json_encode(["code" => 200, "data" => $quizzes]);
+            }
+            break;
+
+
+        // ------------------- GET QUIZ BY ID -------------------
         case 'getQuiz':
             $quiz_id = isset($_GET['id']) ? intval($_GET['id']) : null;
 

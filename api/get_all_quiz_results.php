@@ -10,19 +10,21 @@ error_reporting(E_ALL);
 header('Content-Type: application/json');
 
 try {
-    // --- DB connection check ---
+    // =======================
+    // DB CONNECTION CHECK
+    // =======================
     if (!$conn) {
         throw new Exception("Database connection failed");
     }
 
     // =======================
-    // GET ALL QUIZ ATTEMPTS
+    // FETCH QUIZ ATTEMPTS
     // =======================
     $query = "
         SELECT 
             qa.id,
             qa.user_id,
-            u.name AS user_name,
+            u.fullname AS user_name,
             qa.module_id,
             qa.quiz_id,
             qa.answers,
@@ -47,6 +49,18 @@ try {
 
     $results = [];
 
+    // =======================
+    // SUMMARY COUNTERS
+    // =======================
+    $total_pass = 0;
+    $total_fail = 0;
+
+    // PASS MARK (50%)
+    $pass_mark = 0.5;
+
+    // =======================
+    // LOOP THROUGH RESULTS
+    // =======================
     while ($row = $result->fetch_assoc()) {
 
         // Decode JSON safely
@@ -57,7 +71,8 @@ try {
         $max_score = 0;
 
         foreach ($questions as $index => $question) {
-            $qid = $question['id'] ?? ($index + 1); // fallback to index +1
+
+            $qid = $question['id'] ?? ($index + 1);
             $correct_answer = $question['correct_answer'] ?? '';
             $score = isset($question['score']) ? (int)$question['score'] : 0;
 
@@ -66,17 +81,42 @@ try {
             $user_answer = null;
 
             foreach ($submitted_answers as $ans) {
-                if (isset($ans['question_id']) && (int)$ans['question_id'] === (int)$qid) {
+                if (
+                    isset($ans['question_id']) &&
+                    (int)$ans['question_id'] === (int)$qid
+                ) {
                     $user_answer = $ans['selected_answer'] ?? null;
                     break;
                 }
             }
 
+            // Check correct answer
             if ($user_answer !== null && $user_answer === $correct_answer) {
                 $total_score += $score;
             }
         }
 
+        // =======================
+        // CALCULATE RESULTS
+        // =======================
+        $percentage = ($max_score > 0)
+            ? round(($total_score / $max_score) * 100, 2)
+            : 0;
+
+        $status = ($max_score > 0 && $total_score >= ($max_score * $pass_mark))
+            ? "PASS"
+            : "FAIL";
+
+        // Count pass/fail
+        if ($status === "PASS") {
+            $total_pass++;
+        } else {
+            $total_fail++;
+        }
+
+        // =======================
+        // STORE RESULT
+        // =======================
         $results[] = [
             "id" => (int)$row['id'],
             "user_id" => (int)$row['user_id'],
@@ -88,29 +128,42 @@ try {
             "quiz_id" => (int)($row['quiz_id'] ?? 0),
             "total_score" => $total_score,
             "max_score" => $max_score,
-            "percentage" => $max_score > 0 ? round(($total_score / $max_score) * 100, 2) : 0,
-            "status" => ($max_score > 0 && $total_score >= ($max_score * 0.5)) ? "PASS" : "FAIL",
+            "percentage" => $percentage,
+            "status" => $status,
             "submitted_at" => $row['submitted_at'] ?? null
         ];
     }
 
+    // =======================
+    // FINAL RESPONSE
+    // =======================
     echo json_encode([
         "code" => 200,
+        "summary" => [
+            "total_attempts" => count($results),
+            "total_pass" => $total_pass,
+            "total_fail" => $total_fail
+        ],
         "results" => $results
     ]);
 
 } catch (Exception $e) {
-    // Log the error and return JSON safely
+
+    // Log error if logger exists
     if (function_exists('log_error')) {
         log_error($e->getMessage());
     }
 
     http_response_code(500);
+
     echo json_encode([
         "code" => 500,
         "message" => $e->getMessage(),
         "results" => []
     ]);
+
 } finally {
-    if (isset($conn) && $conn) $conn->close();
+    if (isset($conn) && $conn) {
+        $conn->close();
+    }
 }

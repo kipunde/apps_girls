@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../Models/CourseModule.dart';
-import 'CourseDetailPage.dart'; // VideoPlayerPage is here
+import 'VideoPlayerPage.dart';
 
 class VideoListPage extends StatelessWidget {
   final List<CourseModule> videos;

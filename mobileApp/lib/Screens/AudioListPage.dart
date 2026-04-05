@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../Models/CourseModule.dart';
-import 'CourseDetailPage.dart'; 
+import 'AudioPlayerPage.dart';
 
 class AudioListPage extends StatelessWidget {
   final List<CourseModule> audios;

@@ -45,19 +45,20 @@ $query = "SELECT
 
         CASE WHEN q.id IS NOT NULL THEN 1 ELSE 0 END AS has_quiz
     FROM course_enrollments AS ce
-    INNER JOIN module_enrollments AS me 
-        ON me.user_id = ce.user_id 
-        AND me.module_id IN (
-            SELECT id FROM modules WHERE course_id = ce.course_id
-        )
     INNER JOIN modules AS m 
-        ON m.id = me.module_id
+        ON ce.course_id = m.course_id
+     
     INNER JOIN courses AS c 
         ON c.id = m.course_id
     LEFT JOIN quizzes AS q 
         ON q.module_id = m.id
-    WHERE ce.user_id = ? 
-      AND ce.course_id = ? 
+INNER JOIN module_enrollments AS me 
+        ON me.user_id = ce.user_id 
+        AND me.module_id IN (
+            SELECT id FROM modules WHERE course_id = ce.course_id
+        )
+    WHERE ce.user_id = ?
+      AND ce.course_id = ?
       AND ce.status IN ('enrolled','in_progress')
     GROUP BY m.id
     ORDER BY m.id ASC";
