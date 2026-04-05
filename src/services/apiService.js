@@ -637,4 +637,35 @@ async getAllQuizResults() {
   }
 },
 
+// ✅ Get quiz result for a specific user & module
+async getQuizResult({ user_id, module_id, quiz_id }) {
+  try {
+    const response = await fetch(
+      `${this.baseUrl}/get_quiz_result.php?user_id=${user_id}&module_id=${module_id}&quiz_id=${quiz_id}`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("getQuizResult API response:", data);
+
+    if (data.code !== 200) {
+      throw new Error(data.message || "Failed to fetch quiz result");
+    }
+
+    return data; // your backend should return the quiz result object
+
+  } catch (error) {
+    console.error("API getQuizResult error:", error.message);
+    return { code: 500, message: error.message, result: null };
+  }
+}
+
 };

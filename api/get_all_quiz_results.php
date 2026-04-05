@@ -130,6 +130,8 @@ try {
             "max_score" => $max_score,
             "percentage" => $percentage,
             "status" => $status,
+            'questions'=>$questions,
+            'submitted_answers'=>$submitted_answers,
             "submitted_at" => $row['submitted_at'] ?? null
         ];
     }
