@@ -18,6 +18,8 @@ export default {
         document_preview: null,
         audio_link: "",
         video_link: "",
+        audio_preview: null,   // ✅ added
+        video_preview: null,   // ✅ added
       },
       saving: false,
       editingModuleId: null,
@@ -93,6 +95,30 @@ export default {
       }
     },
 
+    // ✅ FIXED (audio correct)
+    onAudioChange(event) {
+      const file = event.target.files[0];
+      if (file) {
+        this.moduleForm.audio_link = file;
+        this.moduleForm.audio_preview = file.name;
+      } else {
+        this.moduleForm.audio_link = null;
+        this.moduleForm.audio_preview = null;
+      }
+    },
+
+    // ✅ FIXED (was wrongly using audio_link)
+    onVideoChange(event) {
+      const file = event.target.files[0];
+      if (file) {
+        this.moduleForm.video_link = file;
+        this.moduleForm.video_preview = file.name;
+      } else {
+        this.moduleForm.video_link = null;
+        this.moduleForm.video_preview = null;
+      }
+    },
+
     addModule() {
       this.editingModuleId = null;
       this.moduleForm = {
@@ -101,8 +127,10 @@ export default {
         short_detail: "",
         document: null,
         document_preview: null,
-        audio_link: "",
-        video_link: "",
+        audio_preview: null,   // ✅ added
+        video_preview: null,   // ✅ added
+        audio_link: null,
+        video_link: null,
       };
       const modalEl = document.getElementById("moduleModal");
       const modalInstance = Modal.getInstance(modalEl) || new Modal(modalEl);
@@ -118,6 +146,8 @@ export default {
       this.moduleForm.document_preview = module.document_path;
       this.moduleForm.audio_link = module.audio_link;
       this.moduleForm.video_link = module.video_link;
+      this.moduleForm.audio_preview = module.audio_link; // ✅ show existing
+      this.moduleForm.video_preview = module.video_link; // ✅ show existing
       const modalEl = document.getElementById("moduleModal");
       const modalInstance = Modal.getInstance(modalEl) || new Modal(modalEl);
       modalInstance.show();
@@ -139,7 +169,7 @@ export default {
           course_id: this.moduleForm.course_id,
           title: this.moduleForm.title,
           short_detail: this.moduleForm.short_detail,
-          document: this.moduleForm.document, // can be null
+          document: this.moduleForm.document,
           audio_link: this.moduleForm.audio_link,
           video_link: this.moduleForm.video_link,
         };
@@ -167,6 +197,8 @@ export default {
             document_preview: null,
             audio_link: "",
             video_link: "",
+            audio_preview: null,   // ✅ added
+            video_preview: null,   // ✅ added
           };
           this.fetchModules();
           const modalEl = document.getElementById("moduleModal");
@@ -316,12 +348,14 @@ export default {
             <span v-if="moduleForm.document_preview">Current: {{ moduleForm.document_preview }}</span>
           </div>
           <div class="mb-3">
-            <label class="form-label">Audio Link</label>
-            <input type="text" v-model="moduleForm.audio_link" class="form-control" />
+            <label class="form-label">Audio File</label>
+            <input type="file" @change="onAudioChange" class="form-control" accept="audio/*" />
+            <span v-if="moduleForm.audio_preview">Current: {{ moduleForm.audio_preview }}</span>
           </div>
-          <div class="mb-3">
-            <label class="form-label">Video Link</label>
-            <input type="text" v-model="moduleForm.video_link" class="form-control" />
+           <div class="mb-3">
+            <label class="form-label">Video File</label>
+            <input type="file" @change="onVideoChange" class="form-control" accept="video/*" />
+            <span v-if="moduleForm.video_preview">Current: {{ moduleForm.video_preview }}</span>
           </div>
         </div>
         <div class="modal-footer">

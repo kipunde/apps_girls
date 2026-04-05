@@ -352,8 +352,6 @@ case 'save_module':
     $course_id    = isset($_POST['course_id']) ? intval($_POST['course_id']) : 0;
     $title        = trim($_POST['title'] ?? '');
     $short_detail = trim($_POST['short_detail'] ?? '');
-    $audio_link   = trim($_POST['audio_link'] ?? '');
-    $video_link   = trim($_POST['video_link'] ?? '');
 
     // --- Validation ---
     if ($course_id <= 0 || $title === '') {
@@ -361,17 +359,33 @@ case 'save_module':
         exit;
     }
 
-    // --- Handle file upload ---
+    // --- Ensure upload directory ---
+    if (!is_dir('uploads/modules')) {
+        mkdir('uploads/modules', 0777, true);
+    }
+
+    // --- Handle document upload ---
     $document_path = null;
     if (isset($_FILES['document']) && $_FILES['document']['error'] === 0) {
         $ext = pathinfo($_FILES['document']['name'], PATHINFO_EXTENSION);
-        $document_path = uniqid() . '.' . $ext;
-
-        if (!is_dir('uploads/modules')) {
-            mkdir('uploads/modules', 0777, true);
-        }
-
+        $document_path = uniqid('doc_') . '.' . $ext;
         move_uploaded_file($_FILES['document']['tmp_name'], 'uploads/modules/' . $document_path);
+    }
+
+    // ✅ --- Handle AUDIO upload (FIXED) ---
+    $audio_link = null;
+    if (isset($_FILES['audio_link']) && $_FILES['audio_link']['error'] === 0) {
+        $ext = pathinfo($_FILES['audio_link']['name'], PATHINFO_EXTENSION); // ✅ FIXED
+        $audio_link = uniqid('audio_') . '.' . $ext;
+        move_uploaded_file($_FILES['audio_link']['tmp_name'], 'uploads/modules/' . $audio_link); // ✅ FIXED
+    }
+
+    // ✅ --- Handle VIDEO upload (FIXED) ---
+    $video_link = null;
+    if (isset($_FILES['video_link']) && $_FILES['video_link']['error'] === 0) {
+        $ext = pathinfo($_FILES['video_link']['name'], PATHINFO_EXTENSION); // ✅ FIXED
+        $video_link = uniqid('video_') . '.' . $ext;
+        move_uploaded_file($_FILES['video_link']['tmp_name'], 'uploads/modules/' . $video_link); // ✅ FIXED
     }
 
     // --- Insert module ---
@@ -379,6 +393,7 @@ case 'save_module':
         "INSERT INTO modules (course_id, title, short_detail, document_path, audio_link, video_link, created_at) 
          VALUES (?, ?, ?, ?, ?, ?, NOW())"
     );
+
     $stmt->bind_param("isssss", $course_id, $title, $short_detail, $document_path, $audio_link, $video_link);
     $stmt->execute();
 
@@ -388,6 +403,7 @@ case 'save_module':
             : ["code" => 500, "message" => "Failed to add module"]
     );
     break;
+
 case 'update_module':
     $id = $_POST['id'] ?? 0;
     $title = $_POST['title'] ?? '';
@@ -398,30 +414,80 @@ case 'update_module':
         exit;
     }
 
-    // Handle optional file replacement
+    // --- Ensure upload directory ---
+    if (!is_dir('uploads/modules')) {
+        mkdir('uploads/modules', 0777, true);
+    }
+
+    // --- Handle document upload ---
     $document_path = null;
     if (isset($_FILES['document']) && $_FILES['document']['error'] == 0) {
         $ext = pathinfo($_FILES['document']['name'], PATHINFO_EXTENSION);
-        $document_path = uniqid() . '.' . $ext;
+        $document_path = uniqid('doc_') . '.' . $ext;
         move_uploaded_file($_FILES['document']['tmp_name'], 'uploads/modules/' . $document_path);
     }
 
-    $audio_link = $_POST['audio_link'] ?? '';
-    $video_link = $_POST['video_link'] ?? '';
+    // ✅ --- Handle AUDIO upload ---
+    $audio_link = null;
+    if (isset($_FILES['audio_link']) && $_FILES['audio_link']['error'] === 0) {
+        $ext = pathinfo($_FILES['audio_link']['name'], PATHINFO_EXTENSION);
+        $audio_link = uniqid('audio_') . '.' . $ext;
+        move_uploaded_file($_FILES['audio_link']['tmp_name'], 'uploads/modules/' . $audio_link);
+    }
 
-    if ($document_path) {
-        $stmt = $conn->prepare("UPDATE modules SET title=?, short_detail=?, document_path=?, audio_link=?, video_link=? WHERE id=?");
-        $stmt->bind_param("sssssi", $title, $short_detail, $document_path, $audio_link, $video_link, $id);
+    // ✅ --- Handle VIDEO upload ---
+    $video_link = null;
+    if (isset($_FILES['video_link']) && $_FILES['video_link']['error'] === 0) {
+        $ext = pathinfo($_FILES['video_link']['name'], PATHINFO_EXTENSION);
+        $video_link = uniqid('video_') . '.' . $ext;
+        move_uploaded_file($_FILES['video_link']['tmp_name'], 'uploads/modules/' . $video_link);
+    }
+
+    // --- Build query dynamically (only update what exists) ---
+    if ($document_path || $audio_link || $video_link) {
+
+        $query = "UPDATE modules SET title=?, short_detail=?";
+        $params = [$title, $short_detail];
+        $types = "ss";
+
+        if ($document_path) {
+            $query .= ", document_path=?";
+            $params[] = $document_path;
+            $types .= "s";
+        }
+
+        if ($audio_link) {
+            $query .= ", audio_link=?";
+            $params[] = $audio_link;
+            $types .= "s";
+        }
+
+        if ($video_link) {
+            $query .= ", video_link=?";
+            $params[] = $video_link;
+            $types .= "s";
+        }
+
+        $query .= " WHERE id=?";
+        $params[] = $id;
+        $types .= "i";
+
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param($types, ...$params);
+
     } else {
-        $stmt = $conn->prepare("UPDATE modules SET title=?, short_detail=?, audio_link=?, video_link=? WHERE id=?");
-        $stmt->bind_param("ssssi", $title, $short_detail, $audio_link, $video_link, $id);
+        // no file updates
+        $stmt = $conn->prepare("UPDATE modules SET title=?, short_detail=? WHERE id=?");
+        $stmt->bind_param("ssi", $title, $short_detail, $id);
     }
 
     $stmt->execute();
+
     echo json_encode($stmt->affected_rows > 0
         ? ["code"=>200, "message"=>"Module updated successfully"]
-        : ["code"=>500, "message"=>"Failed to update module"]);
+        : ["code"=>500, "message"=>"No changes made or update failed"]);
     break;
+
 
 case 'delete_module':
     $id = $_POST['id'] ?? 0;
