@@ -107,13 +107,13 @@ class _CourseDetailPageState extends State<CourseDetailPage>
       case 'Audio':
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => AudioListPage(audios: [module])),
+          MaterialPageRoute(builder: (_) => AudioListPage(moduleId: module.id)),
         );
         break;
       case 'Video':
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => VideoListPage(videos: [module])),
+          MaterialPageRoute(builder: (_) => VideoListPage(moduleId: module.id)),
         );
         break;
       case 'Quiz':

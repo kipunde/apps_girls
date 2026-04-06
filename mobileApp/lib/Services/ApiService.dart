@@ -244,4 +244,76 @@ Future<List<CourseModule>> getDocumentsByModule(int moduleId) async {
   }
 }
 
+/// GET audio BY MODULE ID
+Future<List<CourseModule>> getAudiosByModule(int moduleId) async {
+  print("Fetching audio for module id: $moduleId");
+
+  try {
+    final response = await http.post(
+      Uri.parse('${baseAPIPath}get_module_audio.php'), // your PHP endpoint
+      body: {
+        'module_id': moduleId.toString(),
+      },
+    );
+
+    print("Status code: ${response.statusCode}");
+    print("API response data: ${response.body}");
+
+    if (response.statusCode != 200) {
+      throw Exception("Failed to load audio: HTTP ${response.statusCode}");
+    }
+
+    final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+
+    if (jsonResponse['code'] != 200) {
+      throw Exception("API Error: ${jsonResponse['message']}");
+    }
+
+    final List data = jsonResponse['modules'] ?? [];
+
+    // Map each JSON audio to CourseModule
+    return data.map((json) => CourseModule.fromJson(json)).toList();
+  } catch (e) {
+    print("Error fetching audio: $e");
+    rethrow;
+  }
 }
+
+/// GET video BY MODULE ID
+Future<List<CourseModule>> getVideosByModule(int moduleId) async {
+  print("Fetching video for module id: $moduleId");
+
+  try {
+    final response = await http.post(
+      Uri.parse('${baseAPIPath}get_module_video.php'), // your PHP endpoint
+      body: {
+        'module_id': moduleId.toString(),
+      },
+    );
+
+    print("Status code: ${response.statusCode}");
+    print("API response data: ${response.body}");
+
+    if (response.statusCode != 200) {
+      throw Exception("Failed to load video: HTTP ${response.statusCode}");
+    }
+
+    final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+
+    if (jsonResponse['code'] != 200) {
+      throw Exception("API Error: ${jsonResponse['message']}");
+    }
+
+    final List data = jsonResponse['modules'] ?? [];
+
+    // Map each JSON audio to CourseModule
+    return data.map((json) => CourseModule.fromJson(json)).toList();
+  } catch (e) {
+    print("Error fetching video: $e");
+    rethrow;
+  }
+}
+
+
+
+} 
