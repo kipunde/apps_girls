@@ -64,73 +64,78 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     }
   }
 
-  // ✅ Navigate to LIST pages
-  void openModule(String type) {
+  // ✅ Check if module can be opened based on previous module & 7-day rule
+  bool canOpenModule(int index) {
+    if (index == 0) return true; // First module always open
+
+    final previousModule = modules[index - 1];
+    if (previousModule.isCompleted) return true;
+    if (previousModule.startedAt != null) {
+      final now = DateTime.now();
+      final diff = now.difference(previousModule.startedAt!).inDays;
+      return diff >= 7;
+    }
+    return false;
+  }
+
+  // ✅ Navigate to specific module list page
+  void openModule(String type, CourseModule module, int index) {
+    if (!canOpenModule(index)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'Please complete the previous module or wait 7 days to access this one.'),
+        ),
+      );
+      return;
+    }
+
+    // Set start time if not started
+    if (module.startedAt == null) {
+      setState(() {
+        module.startedAt = DateTime.now();
+      });
+    }
+
     switch (type) {
       case 'Document':
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => DocumentListPage(
-              documents: modules
-                  .where((m) => m.documentPath?.isNotEmpty ?? false)
-                  .toList(),
-            ),
-          ),
+          MaterialPageRoute(builder: (_) => DocumentListPage(documents: [module])),
         );
         break;
-
       case 'Audio':
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => AudioListPage(
-              audios: modules
-                  .where((m) => m.audioLink?.isNotEmpty ?? false)
-                  .toList(),
-            ),
-          ),
+          MaterialPageRoute(builder: (_) => AudioListPage(audios: [module])),
         );
         break;
-
       case 'Video':
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => VideoListPage(
-              videos: modules
-                  .where((m) => m.videoLink?.isNotEmpty ?? false)
-                  .toList(),
-            ),
-          ),
+          MaterialPageRoute(builder: (_) => VideoListPage(videos: [module])),
         );
         break;
-
       case 'Quiz':
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => QuizListPage(
-              quizzes: modules.where((m) => m.hasQuiz).toList(),
-              userId: userId,
-            ),
-          ),
+          MaterialPageRoute(builder: (_) => QuizListPage(quizzes: [module], userId: userId)),
         );
         break;
     }
   }
 
-  // ✅ SHOW MODULE TITLES
-  Widget moduleCard(String type, CourseModule module) {
+  // ✅ Module card with locked state
+  Widget moduleCard(String type, CourseModule module, int index) {
+    final unlocked = canOpenModule(index);
     return GestureDetector(
-      onTap: () => openModule(type),
+      onTap: () => unlocked ? openModule(type, module, index) : null,
       child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              getTypeColor(type).withOpacity(0.8),
-              getTypeColor(type),
-            ],
+            colors: unlocked
+                ? [getTypeColor(type).withOpacity(0.8), getTypeColor(type)]
+                : [Colors.grey.withOpacity(0.5), Colors.grey],
           ),
           borderRadius: BorderRadius.circular(15),
         ),
@@ -139,18 +144,18 @@ class _CourseDetailPageState extends State<CourseDetailPage>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              module.title, // ✅ MODULE TITLE
+              module.title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: unlocked ? Colors.white : Colors.white70,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              type, // optional
-              style: const TextStyle(
-                color: Colors.white70,
+              unlocked ? type : 'Locked',
+              style: TextStyle(
+                color: unlocked ? Colors.white70 : Colors.white38,
                 fontSize: 12,
               ),
             ),
@@ -160,32 +165,26 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     );
   }
 
+  // ✅ Build tab content
   Widget buildTabContent(String type) {
     List<CourseModule> filteredModules;
 
     switch (type) {
       case 'Document':
-        filteredModules = modules
-            .where((m) => m.documentPath?.isNotEmpty ?? false)
-            .toList();
+        filteredModules =
+            modules.where((m) => m.documentPath?.isNotEmpty ?? false).toList();
         break;
-
       case 'Audio':
-        filteredModules = modules
-            .where((m) => m.audioLink?.isNotEmpty ?? false)
-            .toList();
+        filteredModules =
+            modules.where((m) => m.audioLink?.isNotEmpty ?? false).toList();
         break;
-
       case 'Video':
-        filteredModules = modules
-            .where((m) => m.videoLink?.isNotEmpty ?? false)
-            .toList();
+        filteredModules =
+            modules.where((m) => m.videoLink?.isNotEmpty ?? false).toList();
         break;
-
       case 'Quiz':
         filteredModules = modules.where((m) => m.hasQuiz).toList();
         break;
-
       default:
         filteredModules = [];
     }
@@ -203,7 +202,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
         mainAxisSpacing: 12,
       ),
       itemBuilder: (_, index) {
-        return moduleCard(type, filteredModules[index]);
+        return moduleCard(type, filteredModules[index], index);
       },
     );
   }

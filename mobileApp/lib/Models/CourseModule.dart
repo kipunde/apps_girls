@@ -16,6 +16,10 @@ class CourseModule {
   final String? quizName;
   final List<Map<String, dynamic>>? questions;
 
+  // ✅ Local tracking
+  DateTime? startedAt;       // when user starts the module
+  bool isCompleted = false;  // track if module finished
+
   CourseModule({
     required this.id,
     required this.quizId,
@@ -31,45 +35,63 @@ class CourseModule {
     this.hasQuiz = false,
     this.quizName,
     this.questions,
+    this.startedAt,
+    this.isCompleted = false,
   });
 
   factory CourseModule.fromJson(Map<String, dynamic> json) {
-  List<Map<String, dynamic>>? parsedQuestions;
+    List<Map<String, dynamic>>? parsedQuestions;
 
-  // Parse questions if available
-  if (json['questions'] != null) {
+    if (json['questions'] != null) {
+      try {
+        parsedQuestions = List<Map<String, dynamic>>.from(
+          (jsonDecode(json['questions']) as List<dynamic>)
+              .map((e) => Map<String, dynamic>.from(e)),
+        );
+      } catch (e) {
+        parsedQuestions = null;
+        print("Error parsing questions: $e");
+      }
+    }
+
+    int parsedQuizId = json['quiz_id'] != null
+        ? int.tryParse(json['quiz_id'].toString()) ?? 0
+        : 0;
+
+    return CourseModule(
+      id: json['module_id'] ?? json['id'] ?? 0,
+      moduleId: json['module_id'] ?? 0,
+      quizId: parsedQuizId,
+      courseName: json['course_name'] ?? '',
+      title: json['module_title'] ?? '',
+      shortDetail: json['short_detail'] ?? '',
+      documentPath: json['document_path'],
+      audioLink: json['audio_link'],
+      videoLink: json['video_link'],
+      moduleStatus: json['module_status'] ?? 'disabled',
+      assignedAt: json['assigned_at'] ?? '',
+      hasQuiz: parsedQuizId > 0,
+      quizName: json['quize_name'],
+      questions: parsedQuestions,
+    );
+  }
+
+  bool get isUnlocked => moduleStatus == 'enabled';
+
+  // ✅ Compute assigned date as DateTime
+  DateTime? get assignedDate {
     try {
-      parsedQuestions = List<Map<String, dynamic>>.from(
-        (jsonDecode(json['questions']) as List<dynamic>)
-            .map((e) => Map<String, dynamic>.from(e)),
-      );
+      return DateTime.parse(assignedAt);
     } catch (e) {
-      parsedQuestions = null; // fallback if JSON parsing fails
-      print("Error parsing questions: $e");
+      return null;
     }
   }
 
-  int parsedQuizId = json['quiz_id'] != null
-      ? int.tryParse(json['quiz_id'].toString()) ?? 0
-      : 0;
-
-  return CourseModule(
-    id: json['module_id'] ?? json['id'] ?? 0,
-    moduleId: json['module_id'] ?? 0,
-    quizId: parsedQuizId,
-    courseName: json['course_name'] ?? '',
-    title: json['module_title'] ?? '',
-    shortDetail: json['short_detail'] ?? '',
-    documentPath: json['document_path'],
-    audioLink: json['audio_link'],
-    videoLink: json['video_link'],
-    moduleStatus: json['module_status'] ?? 'disabled',
-    assignedAt: json['assigned_at'] ?? '',
-    hasQuiz: parsedQuizId > 0,          // ✅ compute from quiz_id
-    quizName: json['quize_name'],
-    questions: parsedQuestions,
-  );
-}
-  // Convenience getter
-  bool get isUnlocked => moduleStatus == 'enabled';
+  // ✅ Check if 7 days passed since startedAt
+  bool get canAccessNextModule {
+    if (isCompleted) return true; // already finished
+    if (startedAt == null) return false; // not started yet
+    final now = DateTime.now();
+    return now.difference(startedAt!).inDays >= 7;
+  }
 }

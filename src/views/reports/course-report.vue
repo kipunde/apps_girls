@@ -1,291 +1,65 @@
 <script>
-import { Modal } from "bootstrap";
 import { apiService } from "@/services/apiService";
-import Swal from "sweetalert2";
 
 export default {
   data() {
     return {
       loading: false,
-      saving: false,
-      editingId: null,
       filters: { search: "" },
 
-      coursesList: [],    // All courses
-      modulesList: [],    // All modules from backend
-      attachments: [],
-
-      attachmentForm: {
-        course_id: null,
-        module_id: null,
-        title: "",
-        attachment_type: "document",
-        file: null,
-        content_type:"exam",
-        file_preview: null,
-        external_url: "",
-        description: ""
-      },
+      userReports: [],
 
       columns: [
         { title: "ID", dataIndex: "id", key: "id" },
-        { title: "Course", dataIndex: "course_title", key: "course_title" },
-        { title: "Module", dataIndex: "module_title", key: "module_title" },
-        { title: "Title", dataIndex: "title", key: "title" },
-        { title: "File / Link", key: "file_url" },
-        { title: "Created On", dataIndex: "created_at", key: "created_at" },
-        { title: "Action", key: "action" }
+        { title: "Course Name", dataIndex: "course_title", key: "course_title" },
+        { title: "Total Student Enrolled", dataIndex: "total_students", key: "total_students" },
+        { title: "Total Modules", dataIndex: "total_modules", key: "total_modules" },
+        { title: "Total Quizess", dataIndex: "total_quizzes", key: "total_quizzes" }
       ]
     };
   },
 
   computed: {
-    filteredAttachments() {
+    filteredReports() {
       const q = this.filters.search.toLowerCase();
-      return this.attachments.filter(a => a.title.toLowerCase().includes(q));
-    },
-
-    // Filter modules by selected course
-    filteredModules() {
-      if (!this.attachmentForm.course_id) return [];
-      return this.modulesList.filter(
-        m => m.course_id === this.attachmentForm.course_id
+      return this.userReports.filter(r =>
+        r.total_students.toLowerCase().includes(q) ||
+        r.course_title.toLowerCase().includes(q)
       );
     }
   },
 
-  watch: {
-    "attachmentForm.attachment_type"(newType) {
-      if (newType === "link") {
-        this.attachmentForm.file = null;
-        this.attachmentForm.file_preview = null;
-      } else {
-        this.attachmentForm.external_url = "";
-      }
-    },
-
-    // Reset module selection when course changes
-    "attachmentForm.course_id"(newCourseId) {
-      this.attachmentForm.module_id = null;
-      const modules = this.modulesList.filter(m => m.course_id === newCourseId);
-      if (modules.length) this.attachmentForm.module_id = modules[0].id;
-    }
-  },
-
   methods: {
-    // Fetch all courses
-    async fetchCourses() {
+    async fetchCourseReports() {
+      this.loading = true;
       try {
-        const res = await apiService.getCourses();
-        if (res.code === 200) this.coursesList = res.courses;
-      } catch (err) {
-        console.error(err);
-      }
-    },
+        const res = await apiService.getCourseReports();
 
-    // Fetch all modules
-    async fetchModules() {
-      try {
-        const res = await apiService.getModules();
-        if (res.code === 200) this.modulesList = res.modules;
-      } catch (err) {
-        console.error(err);
-      }
-    },
-
-    // Fetch attachments
-  async fetchAttachments() {
-  this.loading = true;
-
-  try {
-    const res = await apiService.getModuleAttachments();
-
-    if (res.code === 200) {
-      const allowedExtensions = ["txt", "doc", "docx", "xls", "xlsx", "pdf","mp4", "mov", "avi", "mkv", "webm","mp3", "wav", "ogg", "m4a"];
-      const allowedContentTypes = ["report"];
-
-      this.attachments = res.attachments
-        .map(a => ({
-          ...a,
-          module_title: a.module_title || "-",
-          course_title: a.course_title || "-",
-          file_extension: a.file_path
-            ? a.file_path.split(".").pop().toLowerCase()
-            : ""
-        }))
-        .filter(a =>
-          allowedExtensions.includes(a.file_extension) &&
-          allowedContentTypes.includes((a.content_type || "").toLowerCase())
-        );
-    }
-  } catch (err) {
-    console.error("Error fetching attachments:", err);
-  } finally {
-    this.loading = false;
-  }
-},
-
-    addAttachment() {
-      this.editingId = null;
-      this.attachmentForm = {
-        course_id: null,
-        module_id: null,
-        title: "",
-        attachment_type: "document",
-        file: null,
-        content_type:"exam",
-        file_preview: null,
-        external_url: "",
-        description: ""
-      };
-      const modalEl = document.getElementById("attachmentModal");
-      const modal = Modal.getInstance(modalEl) || new Modal(modalEl);
-      modal.show();
-    },
-
-    editAttachment(record) {
-      this.editingId = record.id;
-      this.attachmentForm.course_id = record.course_id || null;
-      this.attachmentForm.module_id = record.module_id || null;
-      this.attachmentForm.title = record.title;
-      this.attachmentForm.attachment_type = record.attachment_type;
-      this.attachmentForm.description = record.description;
-
-      if (record.attachment_type === "link") {
-        this.attachmentForm.external_url = record.external_url || "";
-        this.attachmentForm.file = null;
-        this.attachmentForm.file_preview = null;
-      } else {
-        this.attachmentForm.file_preview = record.file_url || null;
-        this.attachmentForm.file = null;
-        this.attachmentForm.external_url = "";
-      }
-
-      const modalEl = document.getElementById("attachmentModal");
-      const modal = Modal.getInstance(modalEl) || new Modal(modalEl);
-      modal.show();
-    },
-
-    // File upload with restriction
-    onFileChange(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const allowedExtensions = ["txt", "doc", "docx", "xls", "xlsx", "pdf","mp4", "mov", "avi", "mkv", "webm","mp3", "wav", "ogg", "m4a"];
-      const fileExtension = file.name.split('.').pop().toLowerCase();
-
-      if (!allowedExtensions.includes(fileExtension)) {
-        Swal.fire(
-          "Invalid File",
-          "Only txt, doc, docx, pdf, csv, xls, xlsx files are allowed.",
-          "warning"
-        );
-        event.target.value = null;
-        this.attachmentForm.file = null;
-        this.attachmentForm.file_preview = null;
-        return;
-      }
-
-      this.attachmentForm.file = file;
-      this.attachmentForm.file_preview = file.name;
-    },
-
-    async saveAttachment() {
-      if (
-        !this.attachmentForm.course_id ||
-        !this.attachmentForm.module_id ||
-        !this.attachmentForm.title ||
-        !this.attachmentForm.attachment_type
-      ) {
-        Swal.fire("Validation", "Please fill all required fields", "warning");
-        return;
-      }
-
-      this.saving = true;
-
-      try {
-        const payload = {
-          course_id: this.attachmentForm.course_id,
-          module_id: this.attachmentForm.module_id,
-          title: this.attachmentForm.title,
-          attachment_type: this.attachmentForm.attachment_type,
-          description: this.attachmentForm.description,
-          content_type: this.attachmentForm.content_type,
-          external_url:
-            this.attachmentForm.attachment_type === "link"
-              ? this.attachmentForm.external_url
-              : null
-        };
-
-        if (this.attachmentForm.file) payload.file = this.attachmentForm.file;
-
-        let response;
-        if (this.editingId) {
-          payload.id = this.editingId;
-          response = await apiService.updateModuleAttachment(payload);
-        } else {
-          response = await apiService.saveModuleAttachment(payload);
-        }
-
-        if (response.code === 200) {
-          Swal.fire(
-            "Success",
-            this.editingId ? "Attachment updated!" : "Attachment created!",
-            "success"
-          );
-
-          this.editingId = null;
-          this.attachmentForm = {
-            course_id: null,
-            module_id: null,
-            title: "",
-            attachment_type: "document",
-            file: null,
-            file_preview: null,
-            external_url: "",
-            description: ""
-          };
-
-          this.fetchAttachments();
-          const modalEl = document.getElementById("attachmentModal");
-          Modal.getInstance(modalEl)?.hide();
-        } else {
-          Swal.fire("Error", response.message || "Failed to save attachment", "error");
-        }
-      } catch (err) {
-        console.error("Save attachment error:", err);
-        Swal.fire("Error", "Failed to save attachment", "error");
-      } finally {
-        this.saving = false;
-      }
-    },
-
-    async deleteAttachment(record) {
-      const result = await Swal.fire({
-        title: "Are you sure?",
-        text: "This action cannot be undone!",
-        icon: "warning",
-        showCancelButton: true
-      });
-      if (!result.isConfirmed) return;
-
-      try {
-        const res = await apiService.deleteModuleAttachment(record.id);
         if (res.code === 200) {
-          Swal.fire("Deleted", "Attachment has been deleted", "success");
-          this.fetchAttachments();
+          this.userReports = res.reports.map(r => ({
+            id: r.id,
+            total_students: r.total_students || "-",
+            course_title: r.course_title || "-",
+            total_modules: r.total_modules || "-",
+            total_quizzes: r.total_quizzes || 0
+          }));
         }
       } catch (err) {
-        console.error(err);
-        Swal.fire("Error", "Failed to delete attachment", "error");
+        console.error("Error fetching reports:", err);
+      } finally {
+        this.loading = false;
       }
+    },
+
+    getStatus(total_quizzes, score) {
+      if (total_quizzes === 100 && score >= 50) return "Completed";
+      if (total_quizzes > 0) return "In total_quizzes";
+      return "Not Started";
     }
   },
 
   mounted() {
-    this.fetchCourses();
-    this.fetchModules();
-    this.fetchAttachments();
+    this.fetchCourseReports();
   }
 };
 </script>
@@ -300,9 +74,6 @@ export default {
         <div class="page-title">
           <h4>Course Report</h4>
         </div>
-        <!-- <button class="btn btn-added" @click="addAttachment">
-          <vue-feather type="plus-circle" class="me-2" /> Add examination
-        </button> -->
       </div>
 
       <!-- Search -->
@@ -311,37 +82,33 @@ export default {
           type="text"
           v-model="filters.search"
           class="form-control me-2"
-          placeholder="Search by title"
+          placeholder="Search by student or course"
         />
-        <button class="btn btn-primary ms-2" @click="filters.search=''">Clear</button>
+        <button class="btn btn-primary ms-2" @click="filters.search=''">
+          Clear
+        </button>
       </div>
 
-      <!-- Attachments Table -->
+      <!-- Report Table -->
       <div class="card table-list-card">
         <div class="card-body table-responsive">
           <a-table
             :columns="columns"
-            :data-source="filteredAttachments"
+            :data-source="filteredReports"
             :loading="loading"
             rowKey="id"
           >
             <template #bodyCell="{ column, record }">
-              <template v-if="column.key === 'action'">
-                <div class="edit-delete-action">
-                  <a @click="editAttachment(record)" class="me-2"><vue-feather type="edit-2" /></a>
-                  <a @click="deleteAttachment(record)"><vue-feather type="trash-2" /></a>
-                </div>
-              </template>
-
-              <template v-else-if="column.key === 'file_url'">
-                <a
-                  v-if="record.file_url || record.external_url"
-                  :href="record.file_url || record.external_url"
-                  target="_blank"
+              <template v-if="column.key === 'status'">
+                <span
+                  :class="{
+                    'badge bg-success': record.status === 'Completed',
+                    'badge bg-warning': record.status === 'In total_quizzes',
+                    'badge bg-secondary': record.status === 'Not Started'
+                  }"
                 >
-                  Open
-                </a>
-                <span v-else>—</span>
+                  {{ record.status }}
+                </span>
               </template>
 
               <template v-else>
@@ -349,88 +116,6 @@ export default {
               </template>
             </template>
           </a-table>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Add/Edit Modal -->
-  <div class="modal fade" id="attachmentModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">{{ editingId ? "Edit Attachment" : "Add Attachment" }}</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-
-          <!-- Course -->
-          <div class="mb-3">
-            <label class="form-label">Course</label>
-            <select v-model="attachmentForm.course_id" class="form-select">
-              <option disabled value="">Select Course</option>
-              <option v-for="c in coursesList" :key="c.id" :value="c.id">{{ c.title }}</option>
-            </select>
-          </div>
-
-          <!-- Module -->
-          <div class="mb-3">
-            <label class="form-label">Module</label>
-            <select v-model="attachmentForm.module_id" class="form-select">
-              <option disabled value="">Select Module</option>
-              <option v-for="m in filteredModules" :key="m.id" :value="m.id">{{ m.title }}</option>
-            </select>
-          </div>
-
-          <!-- Title -->
-          <div class="mb-3">
-            <label class="form-label">Attachment Title</label>
-            <input type="text" v-model="attachmentForm.title" class="form-control" />
-          </div>
-
-          <!-- Type -->
-             <div class="mb-3">
-            <label class="form-label">Attachment Type</label>
-            <select v-model="attachmentForm.attachment_type" class="form-select">
-              <option value="document">Document</option>
-              <option value="audio">Audio</option>
-              <option value="video">Video</option>
-              <option value="link">External Link</option>
-            </select>
-          </div>
-
-          <!-- File -->
-          <div v-if="attachmentForm.attachment_type !== 'link'" class="mb-3">
-            <label class="form-label">Upload File</label>
-            <input
-              type="file"
-              @change="onFileChange"
-              accept=".txt,.doc,.docx,.pdf,.csv,.xls,.xlsx"
-              class="form-control"
-            />
-            <div v-if="attachmentForm.file_preview" class="mt-2">
-              <span class="text-muted">Current: </span>
-              <a
-                v-if="attachmentForm.file_preview.startsWith('http')"
-                :href="attachmentForm.file_preview"
-                target="_blank"
-              >View File</a>
-              <span v-else>{{ attachmentForm.file_preview }}</span>
-            </div>
-          </div>
-
-          <!-- Description -->
-          <div class="mb-3">
-            <label class="form-label">Description</label>
-            <textarea v-model="attachmentForm.description" class="form-control"></textarea>
-          </div>
-
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary" :disabled="saving" @click="saveAttachment">
-            {{ saving ? "Saving..." : (editingId ? "Update Attachment" : "Save Attachment") }}
-          </button>
         </div>
       </div>
     </div>

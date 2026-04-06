@@ -666,6 +666,68 @@ async getQuizResult({ user_id, module_id, quiz_id }) {
     console.error("API getQuizResult error:", error.message);
     return { code: 500, message: error.message, result: null };
   }
-}
+},
+// ---------------- USER REPORT ----------------
+async getUserReports() {
+  try {
+    const response = await fetch(`${this.baseUrl}/user_reports.php`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include", // keep session
+    });
+
+    // Check HTTP status
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    console.log("User Reports API Response:", data);
+
+    // Validate backend response
+    if (data.code !== 200) {
+      throw new Error(data.message || "Failed to fetch user reports");
+    }
+
+    return {
+      code: 200,
+      reports: data.reports || [],
+    };
+
+  } catch (error) {
+    console.error("API getUserReports error:", error.message);
+
+    return {
+      code: 500,
+      reports: [],
+      message: error.message,
+    };
+  }
+},
+
+// ---------------- COURSE REPORT ----------------
+async getCourseReports() {
+  try {
+    const res = await fetch(`${this.baseUrl}/course_reports.php`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+
+    const data = await res.json();
+
+    return {
+      code: data.code,
+      reports: data.reports || [],
+    };
+
+  } catch (error) {
+    console.error("API getCourseReports error:", error);
+    return { code: 500, reports: [] };
+  }
+},
 
 };

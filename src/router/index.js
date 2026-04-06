@@ -18,7 +18,7 @@ import AllLiveClasses from '@/views/live/all-live-classes.vue'
 import LiveClassParticipants from '@/views/live/live-class-participants.vue'
 import DocumentViews from '@/views/activity/document-views.vue'
 import VideoViews from '@/views/activity/video-views.vue'
-import Downloads from '@/views/activity/video-views.vue'
+import AudioViews from '@/views/activity/audio-views.vue'
 import UserReport from '@/views/reports/user-report.vue'
 import CourseReport from '@/views/reports/course-report.vue'
 import CourseEnrollmentReport from '@/views/reports/course-enrollment-report.vue'
@@ -153,9 +153,9 @@ const routes = [
     component: VideoViews
   },
   {
-    path: '/activity/downloads',
-    name: 'downloads',
-    component: Downloads
+    path: '/activity/audio-views',
+    name: 'audio-views',
+    component: AudioViews
   },
 
   // Reports
@@ -168,11 +168,6 @@ const routes = [
     path: '/reports/courses',
     name: 'course-report',
     component: CourseReport
-  },
-  {
-    path: '/reports/enrollments',
-    name: 'course-enrollment-report',
-    component: CourseEnrollmentReport
   },
 
 ];

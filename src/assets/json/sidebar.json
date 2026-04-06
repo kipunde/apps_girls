@@ -134,12 +134,12 @@
             "route": "/activity/document-views"
           },
           {
-            "menuValue": "Video Views",
-            "route": "/activity/video-views"
+            "menuValue": "Audio Views",
+            "route": "/activity/audio-views"
           },
           {
-            "menuValue": "Downloads",
-            "route": "/activity/downloads"
+            "menuValue": "Video Views",
+            "route": "/activity/video-views"
           }
         ]
       },
@@ -157,10 +157,6 @@
           {
             "menuValue": "Course Report",
             "route": "/reports/courses"
-          },
-          {
-            "menuValue": "Course Enrollment Report",
-            "route": "/reports/enrollments"
           }
         ]
       }

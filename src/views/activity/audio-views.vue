@@ -27,10 +27,10 @@ export default {
         description: ""
       },
 
-      columns: [
+       columns: [
         { title: "Course", dataIndex: "course_title", key: "course_title" },
         { title: "Module", dataIndex: "module_title", key: "module_title" },
-        { title: "Document Name", key: "file_url" },
+        { title: "Video", key: "file_url" },
        { title: "Total views", dataIndex: "title", key: "title" },
       ]
     };
@@ -295,7 +295,7 @@ export default {
     <div class="content">
       <div class="page-header d-flex justify-content-between align-items-center mb-3">
         <div class="page-title">
-          <h4>Views of documents</h4>
+          <h4>Audio Views</h4>
         </div>
         <!-- <button class="btn btn-added" @click="addAttachment">
           <vue-feather type="plus-circle" class="me-2" /> Add examination
