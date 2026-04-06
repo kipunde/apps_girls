@@ -208,4 +208,40 @@ Future<Map<String, dynamic>> getQuizResult({
   return data; 
 }
 
+
+/// GET DOCUMENTS BY MODULE ID
+Future<List<CourseModule>> getDocumentsByModule(int moduleId) async {
+  print("Fetching documents for module id: $moduleId");
+
+  try {
+    final response = await http.post(
+      Uri.parse('${baseAPIPath}get_module_documents.php'), // your PHP endpoint
+      body: {
+        'module_id': moduleId.toString(),
+      },
+    );
+
+    print("Status code: ${response.statusCode}");
+    print("API response data: ${response.body}");
+
+    if (response.statusCode != 200) {
+      throw Exception("Failed to load documents: HTTP ${response.statusCode}");
+    }
+
+    final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+
+    if (jsonResponse['code'] != 200) {
+      throw Exception("API Error: ${jsonResponse['message']}");
+    }
+
+    final List data = jsonResponse['modules'] ?? [];
+
+    // Map each JSON document to CourseModule
+    return data.map((json) => CourseModule.fromJson(json)).toList();
+  } catch (e) {
+    print("Error fetching documents: $e");
+    rethrow;
+  }
+}
+
 }

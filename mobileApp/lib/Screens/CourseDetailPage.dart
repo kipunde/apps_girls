@@ -101,7 +101,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
       case 'Document':
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => DocumentListPage(documents: [module])),
+          MaterialPageRoute(builder: (_) => DocumentListPage(moduleId: module.id)),
         );
         break;
       case 'Audio':
