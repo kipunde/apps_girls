@@ -314,6 +314,40 @@ Future<List<CourseModule>> getVideosByModule(int moduleId) async {
   }
 }
 
+// get list of quiz by module
+
+ Future<List<CourseModule>> getQuizzesByModule(int moduleId) async {
+  print("Fetching modules for module id: $moduleId");
+
+  try {
+    final response = await http.post(
+      Uri.parse('${baseAPIPath}get_quize_byModule.php'),
+      body: {
+        'module_id': moduleId.toString(),
+      },
+    );
+
+    print("Status code: ${response.statusCode}");
+    print("API response data: ${response.body}");
+
+    if (response.statusCode != 200) {
+      throw Exception("Failed to load modules: HTTP ${response.statusCode}");
+    }
+
+    final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+
+    if (jsonResponse['code'] != 200) {
+      throw Exception("API Error: ${jsonResponse['message']}");
+    }
+
+    final List data = jsonResponse['modules'] ?? [];
+    return data.map((json) => CourseModule.fromJson(json)).toList();
+  } catch (e) {
+    print("Error fetching modules: $e");
+    rethrow;
+  }
+}
+
 
 
 } 

@@ -117,11 +117,16 @@ class _CourseDetailPageState extends State<CourseDetailPage>
         );
         break;
       case 'Quiz':
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => QuizListPage(quizzes: [module], userId: userId)),
-        );
-        break;
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => QuizListPage(
+        moduleId: module.moduleId,
+        userId: userId,
+      ),
+    ),
+  );
+  break;
     }
   }
 
