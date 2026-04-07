@@ -298,8 +298,8 @@ Future<List<Course>> _fetchCoursesForUser() async {
                 ),
               ),
               child: Text(course.isEnrolled
-                  ? "Start Your Course"
-                  : "Enroll This Course"),
+                  ? "View Course"
+                  : "Enroll"),
             ),
           ),
         ],
