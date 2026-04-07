@@ -211,99 +211,130 @@ Future<List<Course>> _fetchCoursesForUser() async {
 
   /// COURSE CARD
   Widget courseCard(Course course) {
-    String shortDescription = course.description.length > 25
-        ? course.description.substring(0, 25) + "..."
-        : course.description;
+  String shortDescription = course.description.length > 40
+      ? course.description.substring(0, 40) + "..."
+      : course.description;
 
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xfff3dede),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          course.thumbnail.isNotEmpty
-              ? Image.network(
-                  course.thumbnail,
-                  height: 70,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                )
-              : const Icon(Icons.school, size: 50, color: Colors.blue),
-          const SizedBox(height: 10),
-          Text(
-            course.title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            shortDescription,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 12),
-          ),
-          const SizedBox(height: 10),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () async {
-                if (course.isEnrolled) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => CourseDetailPage(course: course),
-                    ),
-                  );
-                } else {
-                  if (userId == null) return; // safeguard
-                  showDialog(
-                    context: context,
-                    builder: (_) => AlertDialog(
-                      title: Text("Enroll in ${course.title}?"),
-                      content: const Text(
-                          "Do you want to enroll in this course to access full content and modules?"),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text("Cancel"),
-                        ),
-                        TextButton(
-                          onPressed: () async {
-                            bool enrolled = await apiService.enrollCourse(
-                                course.id, userId!);
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content: Text(enrolled
-                                      ? "Enrolled successfully!"
-                                      : "Enrollment failed. Please complete your current course before enrolling in another.")),
-                            );
-                            if (enrolled) {
-                              _loadCourses(); // reload page data
-                            }
-                          },
-                          child: const Text("Enroll"),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: course.isEnrolled ? Colors.green : Colors.orange,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+  return LayoutBuilder(
+    builder: (context, constraints) {
+      double cardWidth = constraints.maxWidth;
+
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xfff3dede),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+
+            /// ✅ ICON ONLY (Responsive)
+            AspectRatio(
+              aspectRatio: 16 / 9,
+              child: Center(
+                child: Icon(
+                  Icons.school,
+                  size: cardWidth * 0.2,
+                  color: Colors.blue,
                 ),
               ),
-              child: Text(course.isEnrolled
-                  ? "View Course"
-                  : "Enroll"),
             ),
-          ),
-        ],
-      ),
-    );
-  }
+
+            const SizedBox(height: 10),
+
+            /// ✅ TITLE
+            Text(
+              course.title,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: cardWidth * 0.06,
+              ),
+            ),
+
+            const SizedBox(height: 6),
+
+            /// ✅ DESCRIPTION
+            Text(
+              shortDescription,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: cardWidth * 0.045,
+              ),
+            ),
+
+            const Spacer(),
+
+            /// ✅ BUTTON
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () async {
+                  if (course.isEnrolled) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => CourseDetailPage(course: course),
+                      ),
+                    );
+                  } else {
+                    if (userId == null) return;
+
+                    showDialog(
+                      context: context,
+                      builder: (_) => AlertDialog(
+                        title: Text("Enroll in ${course.title}?"),
+                        content: const Text(
+                          "Do you want to enroll in this course to access full content and modules?",
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text("Cancel"),
+                          ),
+                          TextButton(
+                            onPressed: () async {
+                              bool enrolled = await apiService.enrollCourse(
+                                  course.id, userId!);
+                              Navigator.pop(context);
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(enrolled
+                                      ? "Enrolled successfully!"
+                                      : "Enrollment failed. Please complete your current course before enrolling in another."),
+                                ),
+                              );
+
+                              if (enrolled) _loadCourses();
+                            },
+                            child: const Text("Enroll"),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: course.isEnrolled
+                      ? const Color(0xffe91e63)
+                      : const Color(0xffe91e63),
+                  foregroundColor: Colors.white,
+                ),
+                child: Text(
+                  course.isEnrolled ? "View Course" : "Enroll",
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
 }

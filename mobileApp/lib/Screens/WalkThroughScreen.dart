@@ -114,7 +114,7 @@ class _WalkThroughScreenState extends State<WalkThroughScreen> {
               },
               child: Text(
                 "Skip",
-                style: boldTextStyle(color: appColorPrimary),
+                style: boldTextStyle(color: const Color(0xffe91e63)),
               ),
             ),
           ),
@@ -135,7 +135,7 @@ class _WalkThroughScreenState extends State<WalkThroughScreen> {
                   width: currentIndex == index ? 24 : 8,
                   decoration: BoxDecoration(
                     color: currentIndex == index
-                        ? appColorPrimary
+                        ? const Color(0xffe91e63)
                         : Colors.grey.shade300,
                     borderRadius: BorderRadius.circular(4),
                   ),
@@ -150,7 +150,7 @@ class _WalkThroughScreenState extends State<WalkThroughScreen> {
             left: 24,
             right: 24,
             child: AppButton(
-              color: appColorPrimary,
+              color: const Color(0xffe91e63),
               shapeBorder: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),

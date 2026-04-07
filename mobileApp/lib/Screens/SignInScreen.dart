@@ -114,7 +114,13 @@ class SignInScreenState extends State<SignInScreen> {
               25.height,
 
               /// PAGE TITLE
-              Text('Sign In', style: boldTextStyle(size: 24)),
+            Text(
+            'Sign In',
+            style: boldTextStyle(
+            size: 24,
+            color: const Color(0xffe91e63), // 👈 add this
+            ),
+),
 
               30.height,
 
@@ -174,7 +180,7 @@ class SignInScreenState extends State<SignInScreen> {
                 alignment: Alignment.center,
                 padding: EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: appColorPrimary,
+                  color: const Color(0xffe91e63),
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: defaultBoxShadow(),
                 ),
@@ -220,7 +226,7 @@ class SignInScreenState extends State<SignInScreen> {
                     },
                     child: Text(
                       "Register",
-                      style: boldTextStyle(color: appColorPrimary),
+                      style: boldTextStyle(color: const Color(0xffe91e63)),
                     ),
                   ),
                 ],

@@ -120,7 +120,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               25.height,
 
               /// PAGE TITLE
-              const Text('Create Account', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              const Text('Create Account', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold,color: Color(0xffe91e63))),
               30.height,
 
               /// FULLNAME
@@ -208,7 +208,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 child: ElevatedButton(
                   onPressed: loading ? null : handleSignUp,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: appColorPrimary,
+                    backgroundColor: const Color(0xffe91e63),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),

@@ -17,9 +17,18 @@ class _DocumentViewerPageState extends State<DocumentViewerPage> {
   void initState() {
     super.initState();
 
-    // Encode URL and load Google Docs Viewer for most document types (pdf, docx, xlsx, txt)
+    // --- Ensure full URL for Google Docs Viewer ---
+    String fullUrl = widget.url;
+
+    // If the URL doesn't start with http, prepend your server base path
+    if (!fullUrl.startsWith('http')) {
+      fullUrl = "https://prasperascons.com/app/api/uploads/modules/$fullUrl";
+    }
+
     final viewerUrl =
-        "https://docs.google.com/gview?embedded=true&url=${Uri.encodeComponent(widget.url)}";
+        "https://docs.google.com/gview?embedded=true&url=${Uri.encodeComponent(fullUrl)}";
+
+    print("document is $fullUrl");
 
     controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
