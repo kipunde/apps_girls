@@ -100,7 +100,14 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Video Player"),
+      title: const Text(
+      "Video Player",
+      style: TextStyle(
+      fontWeight: FontWeight.bold,  // makes the text bold
+      color: Colors.white,          // ensures it's white
+      fontSize: 20,                 // optional: increase font size
+      ),
+      ),
         backgroundColor: const Color(0xffe91e63),
       ),
       body: Padding(

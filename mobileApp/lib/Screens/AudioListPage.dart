@@ -46,7 +46,14 @@ class _AudioListPageState extends State<AudioListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Audios"),
+      title: const Text(
+      "Audios",
+      style: TextStyle(
+      fontWeight: FontWeight.bold,  // makes the text bold
+      color: Colors.white,          // ensures it's white
+      fontSize: 20,                 // optional: increase font size
+      ),
+),
         backgroundColor: const Color(0xffe91e63),
       ),
       body: isLoading

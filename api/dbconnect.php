@@ -1,15 +1,15 @@
 <?php
 //local database
-$host = "localhost";
-$username = "root";
-$password = "ubunifu2016";
-$database = "odo_db";
+// $host = "localhost";
+// $username = "root";
+// $password = "ubunifu2016";
+// $database = "odo_db";
 
 // remote database
-// $host = "localhost";
-// $username = "praspera_appdb_user";
-// $password = "Password@123";
-// $database = "praspera_app_db";
+$host = "localhost";
+$username = "praspera_appdb_user";
+$password = "Password@123";
+$database = "praspera_app_db";
 
 $conn = new mysqli($host, $username, $password, $database);
 

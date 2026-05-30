@@ -28,7 +28,7 @@ dependencies:
   syncfusion_flutter_pdfviewer: ^33.1.45
   video_player: ^2.5.1
   audioplayers: ^6.6.0
-
+  flutter_vlc_player: ^7.4.4
 dev_dependencies:
   flutter_test:
     sdk: flutter

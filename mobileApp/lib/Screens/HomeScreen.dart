@@ -28,73 +28,65 @@ class HomeScreenState extends State<HomeScreen> {
     _checkUserSession();
   }
 
-  /// CHECK IF USER IS LOGGED IN
   Future<void> _checkUserSession() async {
     final user = await authService.getUserAccessDetails();
 
     if (user == null) {
-      // NOT LOGGED IN → GO TO LOGIN
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => SignInScreen()),
       );
     } else {
-      // STORE USER ID
       userId = int.tryParse(user.id ?? '0');
       _loadCourses();
     }
   }
 
-  /// LOAD COURSES FROM API
   void _loadCourses() {
     setState(() {
       _coursesFuture = _fetchCoursesForUser();
     });
   }
 
-  /// Fetch courses and mark enrolled for the current user
- /// Fetch courses and prevent duplicates
-Future<List<Course>> _fetchCoursesForUser() async {
-  if (userId == null) return [];
+  Future<List<Course>> _fetchCoursesForUser() async {
+    if (userId == null) return [];
 
-  final apiResponse = await apiService.getCourses();
-  final loggedUserId = userId ?? 0;
+    final apiResponse = await apiService.getCourses();
+    final loggedUserId = userId ?? 0;
 
-  // Use a Map to prevent duplicates
-  final Map<int, Course> uniqueCourses = {};
+    final Map<int, Course> uniqueCourses = {};
 
-  for (var course in apiResponse) {
-    // Update isEnrolled only for the logged user
-    final isEnrolledForUser = course.isEnrolled && (loggedUserId == course.userId);
+    for (var course in apiResponse) {
+      final isEnrolledForUser =
+          course.isEnrolled && (loggedUserId == course.userId);
 
-    if (!uniqueCourses.containsKey(course.id)) {
-      uniqueCourses[course.id] = Course(
-        id: course.id,
-        title: course.title,
-        description: course.description,
-        thumbnail: course.thumbnail,
-        status: course.status,
-        isEnrolled: isEnrolledForUser,
-        userId: course.userId,
-      );
-    } else {
-      // If course already exists, make sure isEnrolled is true if any entry shows enrolled
-      final existing = uniqueCourses[course.id]!;
-      uniqueCourses[course.id] = Course(
-        id: existing.id,
-        title: existing.title,
-        description: existing.description,
-        thumbnail: existing.thumbnail,
-        status: existing.status,
-        isEnrolled: existing.isEnrolled || isEnrolledForUser,
-        userId: existing.userId ?? course.userId,
-      );
+      if (!uniqueCourses.containsKey(course.id)) {
+        uniqueCourses[course.id] = Course(
+          id: course.id,
+          title: course.title,
+          description: course.description,
+          thumbnail: course.thumbnail,
+          status: course.status,
+          isEnrolled: isEnrolledForUser,
+          userId: course.userId,
+        );
+      } else {
+        final existing = uniqueCourses[course.id]!;
+        uniqueCourses[course.id] = Course(
+          id: existing.id,
+          title: existing.title,
+          description: existing.description,
+          thumbnail: existing.thumbnail,
+          status: existing.status,
+          isEnrolled: existing.isEnrolled || isEnrolledForUser,
+          userId: existing.userId ?? course.userId,
+        );
+      }
     }
+
+    return uniqueCourses.values.toList();
   }
 
-  return uniqueCourses.values.toList();
-}
-  /// REFRESH HANDLER
   Future<void> _refreshCourses() async {
     _loadCourses();
     await _coursesFuture;
@@ -114,18 +106,22 @@ Future<List<Course>> _fetchCoursesForUser() async {
             onPressed: () => exit(0),
           ),
           title: const Text(
-            "WomenBiz 360",
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          "WomenBiz 360",
+          style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: Colors.white, // Use Colors.white instead of white
+          ),
           ),
           actions: [
             Builder(
               builder: (context) => IconButton(
-                icon: const Icon(Icons.menu, color: Colors.white),
+                icon: const Icon(Icons.menu),
                 onPressed: () => Scaffold.of(context).openDrawer(),
               ),
             ),
           ],
         ),
+
         body: _coursesFuture == null
             ? const Center(child: CircularProgressIndicator())
             : RefreshIndicator(
@@ -133,11 +129,12 @@ Future<List<Course>> _fetchCoursesForUser() async {
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   child: Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        /// TOP BANNER
+
+                        /// 🔥 BANNER
                         Container(
                           height: 150,
                           width: double.infinity,
@@ -149,7 +146,10 @@ Future<List<Course>> _fetchCoursesForUser() async {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 25),
+
+                        const SizedBox(height: 20),
+
+                        /// TITLE
                         const Text(
                           "Explore Our Courses",
                           style: TextStyle(
@@ -157,14 +157,18 @@ Future<List<Course>> _fetchCoursesForUser() async {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 10),
+
+                        const SizedBox(height: 8),
+
+                        /// DESCRIPTION
                         Text(
                           "Gain essential business, finance, and digital marketing skills through expert courses tailored for women entrepreneurs.",
                           style: TextStyle(color: Colors.grey[700]),
                         ),
+
                         const SizedBox(height: 20),
 
-                        /// COURSES
+                        /// GRID
                         FutureBuilder<List<Course>>(
                           future: _coursesFuture,
                           builder: (context, snapshot) {
@@ -173,30 +177,45 @@ Future<List<Course>> _fetchCoursesForUser() async {
                               return const Center(
                                   child: CircularProgressIndicator());
                             }
+
                             if (snapshot.hasError) {
                               return Text(
                                 "Error: ${snapshot.error}",
                                 style: const TextStyle(color: Colors.red),
                               );
                             }
-                            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+
+                            if (!snapshot.hasData ||
+                                snapshot.data!.isEmpty) {
                               return const Text("No courses available.");
                             }
 
                             final courses = snapshot.data!;
-                            return GridView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: courses.length,
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                crossAxisSpacing: 12,
-                                mainAxisSpacing: 12,
-                                childAspectRatio: 0.8,
-                              ),
-                              itemBuilder: (context, index) =>
-                                  courseCard(courses[index]),
+
+                            return LayoutBuilder(
+                              builder: (context, constraints) {
+                                double width = constraints.maxWidth;
+
+                                int crossAxisCount =
+                                    width < 600 ? 2 : 3;
+
+                                return GridView.builder(
+                                  shrinkWrap: true,
+                                  physics:
+                                      const NeverScrollableScrollPhysics(),
+                                  itemCount: courses.length,
+                                  gridDelegate:
+                                      SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: crossAxisCount,
+                                    crossAxisSpacing: 12,
+                                    mainAxisSpacing: 12,
+                                    childAspectRatio:
+                                        width < 400 ? 0.60 : 0.68,
+                                  ),
+                                  itemBuilder: (context, index) =>
+                                      courseCard(courses[index]),
+                                );
+                              },
                             );
                           },
                         ),
@@ -209,77 +228,109 @@ Future<List<Course>> _fetchCoursesForUser() async {
     );
   }
 
-  /// COURSE CARD
-  Widget courseCard(Course course) {
+  /// ================= COURSE CARD =================
+ Widget courseCard(Course course) {
   String shortDescription = course.description.length > 40
       ? course.description.substring(0, 40) + "..."
       : course.description;
 
   return LayoutBuilder(
     builder: (context, constraints) {
-      double cardWidth = constraints.maxWidth;
+      double w = constraints.maxWidth;
 
       return Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: const Color(0xfff3dede),
           borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 6,
+              offset: Offset(0, 3),
+            ),
+          ],
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
 
-            /// ✅ ICON ONLY (Responsive)
-            AspectRatio(
-              aspectRatio: 16 / 9,
-              child: Center(
-                child: Icon(
-                  Icons.school,
-                  size: cardWidth * 0.2,
-                  color: Colors.blue,
+            /// 🔥 SMALL IMAGE WITH WHITE BACKGROUND
+            Column(
+              children: [
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: SizedBox(
+                      height: 60,
+                      width: 60,
+                      child: course.thumbnail != null &&
+                              course.thumbnail!.isNotEmpty
+                          ? Image.network(
+                              course.thumbnail!,
+                              fit: BoxFit.contain,
+                              errorBuilder:
+                                  (context, error, stackTrace) {
+                                return Image.asset(
+                                  "images/banner.png",
+                                  fit: BoxFit.contain,
+                                );
+                              },
+                            )
+                          : Image.asset(
+                              "images/banner.png",
+                              fit: BoxFit.contain,
+                            ),
+                    ),
+                  ),
                 ),
-              ),
+
+                const SizedBox(height: 6),
+
+                /// TITLE
+                Text(
+                  course.title,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: (w * 0.075).clamp(13.0, 17.0),
+                  ),
+                ),
+
+                const SizedBox(height: 4),
+
+                /// DESCRIPTION
+                Text(
+                  shortDescription,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: (w * 0.055).clamp(11.0, 14.0),
+                    color: Colors.grey[700],
+                  ),
+                ),
+              ],
             ),
 
-            const SizedBox(height: 10),
-
-            /// ✅ TITLE
-            Text(
-              course.title,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: cardWidth * 0.06,
-              ),
-            ),
-
-            const SizedBox(height: 6),
-
-            /// ✅ DESCRIPTION
-            Text(
-              shortDescription,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: cardWidth * 0.045,
-              ),
-            ),
-
-            const Spacer(),
-
-            /// ✅ BUTTON
+            /// BUTTON
             SizedBox(
               width: double.infinity,
+              height: w < 140 ? 32 : 36,
               child: ElevatedButton(
                 onPressed: () async {
                   if (course.isEnrolled) {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => CourseDetailPage(course: course),
+                        builder: (_) =>
+                            CourseDetailPage(course: course),
                       ),
                     );
                   } else {
@@ -290,24 +341,27 @@ Future<List<Course>> _fetchCoursesForUser() async {
                       builder: (_) => AlertDialog(
                         title: Text("Enroll in ${course.title}?"),
                         content: const Text(
-                          "Do you want to enroll in this course to access full content and modules?",
-                        ),
+                            "Do you want to enroll in this course?"),
                         actions: [
                           TextButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () =>
+                                Navigator.pop(context),
                             child: const Text("Cancel"),
                           ),
                           TextButton(
                             onPressed: () async {
-                              bool enrolled = await apiService.enrollCourse(
-                                  course.id, userId!);
+                              bool enrolled = await apiService
+                                  .enrollCourse(
+                                      course.id, userId!);
+
                               Navigator.pop(context);
 
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(
                                 SnackBar(
                                   content: Text(enrolled
                                       ? "Enrolled successfully!"
-                                      : "Enrollment failed. Please complete your current course before enrolling in another."),
+                                      : "Enrollment failed."),
                                 ),
                               );
 
@@ -321,13 +375,16 @@ Future<List<Course>> _fetchCoursesForUser() async {
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: course.isEnrolled
-                      ? const Color(0xffe91e63)
-                      : const Color(0xffe91e63),
+                  backgroundColor: const Color(0xffe91e63),
                   foregroundColor: Colors.white,
+                  padding: EdgeInsets.zero,
                 ),
-                child: Text(
-                  course.isEnrolled ? "View Course" : "Enroll",
+                child: FittedBox(
+                  child: Text(
+                    course.isEnrolled
+                        ? "View Course"
+                        : "Enroll",
+                  ),
                 ),
               ),
             ),

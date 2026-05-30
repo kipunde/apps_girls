@@ -52,15 +52,15 @@ class _CourseDetailPageState extends State<CourseDetailPage>
   Color getTypeColor(String type) {
     switch (type) {
       case 'Document':
-        return Colors.blue;
+        return Colors.pink;
       case 'Audio':
-        return Colors.green;
+        return Colors.pink;
       case 'Video':
         return Colors.pink;
       case 'Quiz':
-        return Colors.orange;
+        return Colors.pink;
       default:
-        return Colors.purple;
+        return Colors.pink;
     }
   }
 
@@ -140,7 +140,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
           gradient: LinearGradient(
             colors: unlocked
                 ? [getTypeColor(type).withOpacity(0.8), getTypeColor(type)]
-                : [Colors.grey.withOpacity(0.5), Colors.grey],
+                : [Colors.pink.withOpacity(0.5), Colors.pink],
           ),
           borderRadius: BorderRadius.circular(15),
         ),
@@ -216,7 +216,15 @@ class _CourseDetailPageState extends State<CourseDetailPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.course.title ?? "Course"),
+        title: Text(
+        widget.course.title ?? "Course",
+        style: const TextStyle(
+        fontWeight: FontWeight.bold,  // bold text
+        color: Colors.white,          // white color
+        fontSize: 20,                 // optional: adjust size
+        ),
+        ),
+        
         backgroundColor: const Color(0xffe91e63),
         bottom: TabBar(
           controller: _tabController,

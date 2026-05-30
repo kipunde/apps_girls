@@ -1,5 +1,5 @@
-const BASE_URL = "http://localhost/oddproject/api";
-//const BASE_URL = "https://prasperascons.com/app/api";
+//const BASE_URL = "http://localhost/oddproject/api";
+const BASE_URL = "https://prasperascons.com/app/api";
 
 export const apiService = {
   baseUrl: BASE_URL,
